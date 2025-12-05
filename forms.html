@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TyloAI Plan Finder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0ebf8; /* Google Form purple-tinted grey */
+        }
+        .form-header-strip {
+            height: 10px;
+            background-color: rgb(103, 58, 183); /* Google Purple */
+            border-radius: 8px 8px 0 0;
+        }
+        .card-shadow {
+            box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+        }
+        .btn-primary {
+            background-color: rgb(103, 58, 183);
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: rgb(81, 45, 168);
+        }
+        .radio-selected {
+            background-color: #f3e5f5; /* Light purple highlight */
+            border-color: rgb(103, 58, 183);
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom Scrollbar for cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8; 
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-8 px-4">
+
+    <!-- Progress Bar (Google Style) -->
+    <div class="w-full max-w-2xl mb-4 bg-gray-200 rounded-full h-1.5 overflow-hidden">
+        <div id="progressBar" class="bg-purple-600 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+    </div>
+
+    <!-- Main Card Container -->
+    <div class="w-full max-w-2xl bg-white rounded-lg card-shadow relative min-h-[400px] flex flex-col">
+        <div class="form-header-strip"></div>
+        
+        <!-- Content Area -->
+        <div class="p-8 flex-grow flex flex-col" id="quizContainer">
+            
+            <!-- Welcome Screen (Step 0) -->
+            <div id="step-0" class="step-content fade-in">
+                <h1 class="text-3xl font-normal text-gray-900 mb-6">Find Your Perfect TyloAI Plan</h1>
+                <p class="text-gray-700 mb-6 leading-relaxed">
+                    Stop guessing. TyloAI offers powerful models like <strong>Ode-7</strong> and <strong>Flash</strong> with different pricing structures. 
+                    <br><br>
+                    Answer 5 simple questions, and our algorithm will calculate the most cost-effective plan for your specific workflow.
+                </p>
+                <div class="border-t border-gray-200 pt-4 mb-8">
+                    <p class="text-sm text-gray-500">Takes about 30 seconds.</p>
+                </div>
+                <div class="flex justify-end">
+                    <button onclick="nextStep()" class="btn-primary px-6 py-2 rounded text-sm font-medium uppercase tracking-wide shadow-sm">
+                        Start
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dynamic Question Container -->
+            <div id="question-container" class="hidden flex-col justify-between h-full fade-in">
+                <div>
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block" id="q-label">Question 1</span>
+                    <h2 class="text-xl text-gray-900 mb-6" id="q-text">Loading...</h2>
+                    <div class="space-y-3" id="options-list">
+                        <!-- Options injected here -->
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-center mt-8 pt-4 border-t border-gray-100">
+                    <button onclick="prevStep()" class="text-purple-700 hover:bg-purple-50 px-4 py-2 rounded text-sm font-medium transition-colors">
+                        Back
+                    </button>
+                    <button onclick="nextStep()" id="btn-next" class="btn-primary px-6 py-2 rounded text-sm font-medium uppercase tracking-wide shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                        Next
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Screen -->
+            <div id="loading-screen" class="hidden flex-col items-center justify-center h-full min-h-[300px] fade-in">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700 mb-4"></div>
+                <p class="text-gray-600 font-medium">Analyzing your workflow...</p>
+                <p class="text-gray-400 text-sm mt-2">Comparing Ode-7 cost efficiency...</p>
+            </div>
+
+            <!-- Result Screen -->
+            <div id="result-screen" class="hidden flex-col h-full fade-in">
+                <div class="text-center mb-6">
+                    <div class="inline-block bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide mb-3">Recommended</div>
+                    <h2 class="text-4xl font-bold text-gray-900 mb-1" id="res-plan-name">PLAN NAME</h2>
+                    <p class="text-xl text-gray-600" id="res-price">$0 / month</p>
+                </div>
+
+                <div class="bg-purple-50 rounded-lg p-5 border border-purple-100 mb-6">
+                    <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">Why this fits you:</h3>
+                    <ul class="space-y-2 text-sm text-gray-700" id="res-reasons">
+                        <!-- Reasons injected here -->
+                    </ul>
+                </div>
+
+                <div class="flex-grow"></div> <!-- Spacer -->
+
+                <div class="flex flex-col gap-3 mt-4">
+                    <button onclick="goToCheckout()" class="w-full btn-primary py-3 rounded text-base font-medium shadow-md hover:shadow-lg transform transition-all active:scale-95">
+                        Subscribe Now
+                    </button>
+                    <button onclick="goHome()" class="w-full bg-white text-gray-500 hover:text-gray-700 py-3 rounded text-sm font-medium transition-colors hover:underline">
+                        I'll wait, take me back to home
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <div class="mt-4 text-center text-gray-400 text-xs">
+        &copy; 2025 TyloAI Solutions
+    </div>
+
+    <!-- Logic Script -->
+    <script>
+        // --- Configuration ---
+        const questions = [
+            {
+                id: 'budget',
+                text: "What is your approximate monthly budget?",
+                options: [
+                    { label: "I'm strictly free-to-play ($0)", value: 0 },
+                    { label: "Coffee money (~$10)", value: 10 },
+                    { label: "Productivity investment (~$20)", value: 20 },
+                    { label: "Performance is all that matters (Max)", value: 30 }
+                ]
+            },
+            {
+                id: 'volume',
+                text: "How many messages do you send daily?",
+                options: [
+                    { label: "Casual (< 50 msgs)", value: 'low' },
+                    { label: "Steady (50 - 150 msgs)", value: 'medium' },
+                    { label: "Heavy (150 - 300 msgs)", value: 'high' },
+                    { label: "Machine / Extreme (> 300 msgs)", value: 'extreme' }
+                ]
+            },
+            {
+                id: 'model',
+                text: "Which model is your primary driver?",
+                options: [
+                    { label: "Flash (Fast, cheap, standard tasks)", value: 'flash' },
+                    { label: "Ode-7 (Complex logic, coding, math)", value: 'ode7' },
+                    { label: "Mixed (Flash for speed, Ode-7 for tough stuff)", value: 'mixed' }
+                ]
+            },
+            {
+                id: 'burst',
+                text: "Do you ever have 'Burst' sessions? (e.g., 2 hours of non-stop heavy usage on weekends)",
+                options: [
+                    { label: "No, my usage is consistent.", value: false },
+                    { label: "Yes! I need a 'Zero-Cost' window occasionally.", value: true }
+                ]
+            },
+            {
+                id: 'thinking',
+                text: "How much 'Deep Thinking' / 'Extended Thinking' do you need?",
+                options: [
+                    { label: "Rarely needed.", value: 'low' },
+                    { label: "A few times a month.", value: 'medium' },
+                    { label: "I need deep reasoning constantly.", value: 'high' }
+                ]
+            }
+        ];
+
+        // --- State ---
+        let currentStep = 0; // 0 is Welcome, 1-5 Questions, 6 Result
+        let userAnswers = {};
+        let recommendedPlan = 'free'; // default
+
+        // --- DOM Elements ---
+        const progressBar = document.getElementById('progressBar');
+        const quizContainer = document.getElementById('quizContainer');
+        const step0 = document.getElementById('step-0');
+        const qContainer = document.getElementById('question-container');
+        const qLabel = document.getElementById('q-label');
+        const qText = document.getElementById('q-text');
+        const optionsList = document.getElementById('options-list');
+        const loadingScreen = document.getElementById('loading-screen');
+        const resultScreen = document.getElementById('result-screen');
+
+        // --- Navigation Logic ---
+        function nextStep() {
+            if (currentStep > 0 && currentStep <= questions.length) {
+                // Validation: Must select an answer
+                const currentQ = questions[currentStep - 1];
+                if (userAnswers[currentQ.id] === undefined) {
+                    alert("Please select an option to continue.");
+                    return;
+                }
+            }
+
+            currentStep++;
+            updateUI();
+        }
+
+        function prevStep() {
+            if (currentStep > 0) currentStep--;
+            updateUI();
+        }
+
+        function updateUI() {
+            // Update Progress
+            const totalSteps = questions.length + 1; // +1 for welcome
+            const percentage = (currentStep / totalSteps) * 100;
+            progressBar.style.width = `${percentage}%`;
+
+            // Hide all first
+            step0.classList.add('hidden');
+            qContainer.classList.add('hidden');
+            qContainer.classList.remove('flex');
+            loadingScreen.classList.add('hidden');
+            loadingScreen.classList.remove('flex');
+            resultScreen.classList.add('hidden');
+            resultScreen.classList.remove('flex');
+
+            if (currentStep === 0) {
+                step0.classList.remove('hidden');
+            } else if (currentStep <= questions.length) {
+                renderQuestion(currentStep - 1);
+                qContainer.classList.remove('hidden');
+                qContainer.classList.add('flex');
+            } else if (currentStep === questions.length + 1) {
+                // Calculation Step
+                loadingScreen.classList.remove('hidden');
+                loadingScreen.classList.add('flex');
+                setTimeout(() => {
+                    calculateResult();
+                    loadingScreen.classList.add('hidden');
+                    loadingScreen.classList.remove('flex');
+                    resultScreen.classList.remove('hidden');
+                    resultScreen.classList.add('flex');
+                }, 1500); // Fake delay for "algorithm" feel
+            }
+        }
+
+        function renderQuestion(index) {
+            const q = questions[index];
+            qLabel.innerText = `Question ${index + 1} of ${questions.length}`;
+            qText.innerText = q.text;
+            optionsList.innerHTML = '';
+
+            q.options.forEach(opt => {
+                const div = document.createElement('div');
+                const isSelected = userAnswers[q.id] === opt.value;
+                
+                div.className = `border rounded-lg p-4 cursor-pointer transition-all hover:bg-purple-50 flex items-center ${isSelected ? 'border-purple-600 bg-purple-50 ring-1 ring-purple-600' : 'border-gray-300'}`;
+                
+                div.onclick = () => {
+                    userAnswers[q.id] = opt.value;
+                    renderQuestion(index); // Re-render to show selection
+                    // Optional: Auto-advance after small delay for smooth feel
+                    // setTimeout(nextStep, 300); 
+                };
+
+                div.innerHTML = `
+                    <div class="w-5 h-5 rounded-full border-2 ${isSelected ? 'border-purple-600' : 'border-gray-400'} flex items-center justify-center mr-3 bg-white">
+                        ${isSelected ? '<div class="w-2.5 h-2.5 rounded-full bg-purple-600"></div>' : ''}
+                    </div>
+                    <span class="text-gray-800 font-medium">${opt.label}</span>
+                `;
+                optionsList.appendChild(div);
+            });
+        }
+
+        // --- Core Algorithm ---
+        function calculateResult() {
+            let scores = {
+                'free': 0,
+                'pro': 0,
+                'go': 0,
+                'max': 0
+            };
+            let reasons = [];
+
+            const { budget, volume, model, burst, thinking } = userAnswers;
+
+            // 1. Budget Filter (Hard Constraint)
+            if (budget === 0) {
+                recommendedPlan = 'free';
+                displayResult(recommendedPlan, ["Your budget is strictly $0.", "Great starting point with 3,000 daily points.", "Includes 5 Post-Thinking queries per month."]);
+                return;
+            }
+
+            // 2. Volume Logic
+            // Pro: 6k pts, Go: 9k pts
+            if (volume === 'low') {
+                scores.free += 10;
+                scores.pro += 10;
+            } else if (volume === 'medium') {
+                scores.pro += 30; // Sweet spot for Pro
+                scores.go += 10;
+            } else if (volume === 'high') {
+                scores.go += 40; // Needs 9000 pts
+                scores.max += 20;
+                scores.pro -= 10; // Might hit limits
+            } else if (volume === 'extreme') {
+                scores.max += 50;
+                scores.go += 30; // Go is still good due to burst mode
+            }
+
+            // 3. Model Preference (Crucial for Pro vs Go Pricing)
+            // Pro: Ode-7 is 400 pts/msg (Expensive)
+            // Go: Ode-7 is 200 pts/msg (Cheap)
+            if (model === 'flash') {
+                scores.pro += 40; // Pro has unlimited Flash for cheap ($9.99)
+                scores.go += 20; 
+            } else if (model === 'ode7') {
+                scores.pro -= 20; // Bad value for Ode-7 users
+                scores.go += 50; // Great value (half price per msg)
+                scores.max += 30;
+            } else {
+                scores.go += 20; // Mixed users benefit from Go's flexibility
+            }
+
+            // 4. Burst Mode ( The "Go" Plan Killer Feature )
+            if (burst === true) {
+                scores.go += 100; // Massive boost for Go
+                reasons.push("You need the '2-hour Carnival' (Burst Mode) available only on Go and Max.");
+            }
+
+            // 5. Thinking Needs
+            if (thinking === 'high') {
+                scores.max += 40; // Unlimited
+                scores.go += 30; // Unlimited Extended Thinking
+                scores.pro -= 10; // Only 15/month
+            }
+
+            // 6. Budget Soft Check
+            if (budget === 10) {
+                scores.pro += 50; // Strong pull to $9.99
+                scores.go -= 20;
+                scores.max -= 100;
+            } else if (budget === 20) {
+                scores.go += 50; // Strong pull to $19.99
+                scores.max -= 50;
+            }
+
+            // Determine Winner
+            // Sort by score
+            const winner = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+            
+            // Logic Overrides for better UX
+            if (winner === 'pro' && burst === true && budget >= 20) {
+                recommendedPlan = 'go'; // Force upgrade if they can afford it and need burst
+            } else {
+                recommendedPlan = winner;
+            }
+
+            // Generate Display Data
+            if (recommendedPlan === 'free') {
+                // Fallback (already handled above usually)
+            } else if (recommendedPlan === 'pro') {
+                reasons.push("Best value for 'Unlimited Flash' usage.");
+                reasons.push("Fits perfectly within your ~$10 budget.");
+                if (model === 'ode7') reasons.push("Warning: Ode-7 is expensive on this plan (400 pts), rely on Flash more.");
+            } else if (recommendedPlan === 'go') {
+                reasons.push("Includes 9,000 Daily Points (50% more than Pro).");
+                if (model === 'ode7' || model === 'mixed') reasons.push("Ode-7 is 50% cheaper per message (200 pts) compared to Pro.");
+                reasons.push("Unlimited Extended Thinking for complex tasks.");
+                if (burst) reasons.push("Includes weekly 2-hour 'Unlimited Carnival' for your burst sessions.");
+            } else if (recommendedPlan === 'max') {
+                reasons.push("Total freedom: Unlimited points and messages.");
+                reasons.push("No mental load regarding quota or costs.");
+                reasons.push("VIP Priority Support.");
+            }
+
+            displayResult(recommendedPlan, reasons);
+        }
+
+        function displayResult(plan, reasonList) {
+            const titles = {
+                'free': 'Free Plan',
+                'pro': 'Pro Plan',
+                'go': 'Go Plan',
+                'max': 'Max Plan'
+            };
+            const prices = {
+                'free': '$0 / month',
+                'pro': '$9.99 / month',
+                'go': '$19.99 / month',
+                'max': '$29.99 / month'
+            };
+
+            document.getElementById('res-plan-name').innerText = titles[plan];
+            document.getElementById('res-price').innerText = prices[plan];
+            
+            const ul = document.getElementById('res-reasons');
+            ul.innerHTML = '';
+            reasonList.forEach(r => {
+                const li = document.createElement('li');
+                li.innerHTML = `&bull; ${r}`;
+                ul.appendChild(li);
+            });
+        }
+
+        // --- Actions ---
+        function goToCheckout() {
+            // Logic to handle checkout redirection
+            if (recommendedPlan === 'free') {
+                // Free plan doesn't need checkout usually, but let's send them to dashboard
+                window.location.href = 'https://tyloai.com/dashboard'; 
+            } else {
+                // Using hash to pass plan info as requested
+                window.location.href = `https://tyloai.com/checkout#${recommendedPlan}`;
+            }
+        }
+
+        function goHome() {
+            window.location.href = 'https://tyloai.com';
+        }
+
+    </script>
+</body>
+</html>

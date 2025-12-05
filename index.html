@@ -1,0 +1,3594 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TyloAI</title>
+    <style>
+        /* =========================================
+           1. Global Configuration & Variables
+           ========================================= */
+        /*:root {
+            --bg-sidebar: #F9F8F6; 
+            --bg-main: #FFFFFF;
+            
+            --text-primary: #1C1C1C;
+            --text-secondary: #5E5E5E;
+            --text-tertiary: #8E8E8E;
+            
+            --accent-color: #D97757;
+            --accent-bg-hover: #F2EFED;
+            
+            --tyloai-blue: #3771E0; 
+            
+            --border-color: #E5E5E5;
+            
+            --font-serif: "Tiempos Headline", "Georgia", "Times New Roman", serif;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "SF Pro", Helvetica, Arial, sans-serif;
+            
+            --sidebar-width: 260px;
+            --sidebar-collapsed-width: 56px;
+        }*/
+
+:root {
+    /* --- 核心背景色 --- */
+    /* 侧边栏：极浅的冷灰，比纯白稍微深一点点，制造层次 */
+    --bg-sidebar: #F7F8FA; 
+    /* 主区域：保持纯白，专注内容 */
+    --bg-main: #FFFFFF;
+    
+    /* --- 文本颜色 --- */
+    /* 主文本：深得发蓝的灰，比纯黑柔和 */
+    --text-primary: #111827;
+    /* 次要文本：中性灰 */
+    --text-secondary: #6B7280;
+    /* 辅助文本：浅灰 */
+    --text-tertiary: #9CA3AF;
+    
+    /* --- 强调色 --- */
+    /* 按钮背景、高亮：使用活力的皇室蓝 */
+    --accent-color: #2563EB; 
+    /* 悬停背景：浅蓝色调的灰 */
+    --accent-bg-hover: #EFF6FF;
+    
+    --tyloai-blue: #1D4ED8; 
+    
+    /* --- 边框 --- */
+    --border-color: #E5E7EB;
+    
+    /* --- 字体微调 (保持不变) --- */
+    --font-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    
+    /* --- 尺寸 (保持不变) --- */
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 56px;
+}
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            outline: none;
+        }
+
+        body {
+            background-color: #FFFFFF;
+            color: var(--text-primary);
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* =========================================
+           2. Sidebar
+           ========================================= */
+        .sidebar {
+            width: var(--sidebar-collapsed-width); 
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 16px 0; 
+            flex-shrink: 0;
+            transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            position: relative;
+            white-space: nowrap;
+            align-items: center; 
+            z-index: 200;
+        }
+
+        .sidebar.expanded {
+            width: var(--sidebar-width);
+            align-items: stretch;
+            padding: 16px 12px;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 24px;
+            height: 32px;
+            width: 100%;
+        }
+
+        .sidebar.expanded .sidebar-header {
+            justify-content: space-between;
+            padding: 0 8px;
+            margin-bottom: 20px;
+        }
+
+        .logo-text {
+            font-family: var(--font-serif);
+            font-size: 20px;
+            font-weight: 600;
+            color: #222;
+            display: none; 
+        }
+        
+        .sidebar.expanded .logo-text { display: block; }
+
+        .toggle-btn {
+            background: transparent; border: none; cursor: pointer; color: var(--text-tertiary);
+            padding: 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+        }
+        .toggle-btn:hover { background-color: rgba(0,0,0,0.05); color: var(--text-primary); }
+
+        .nav-list {
+            list-style: none; margin-bottom: 24px; width: 100%;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .sidebar.expanded .nav-list { align-items: stretch; }
+
+        .nav-item {
+            display: flex; align-items: center; justify-content: center; padding: 10px 0;
+            border-radius: 6px; cursor: pointer; color: var(--text-secondary);
+            font-size: 14px; font-weight: 500; margin-bottom: 4px; transition: background-color 0.1s;
+            text-decoration: none; width: 36px;
+        }
+        .sidebar.expanded .nav-item { justify-content: flex-start; padding: 8px 10px; width: 100%; }
+        .nav-item:hover { background-color: var(--accent-bg-hover); color: #111; }
+        
+        .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; stroke-width: 2px; }
+        .sidebar.expanded .nav-item svg { margin-right: 10px; width: 18px; height: 18px; }
+        .nav-item span { display: none; }
+        .sidebar.expanded .nav-item span { display: block; }
+
+        .nav-item.new-chat { color: #333; margin-bottom: 12px; }
+        .nav-item.new-chat .icon-circle {
+            width: 28px; height: 28px; background-color: transparent; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent-color);
+        }
+        .sidebar.expanded .nav-item.new-chat .icon-circle {
+            width: 20px; height: 20px; background-color: var(--accent-color); color: white; margin-right: 10px;
+        }
+        .nav-item.new-chat svg { width: 24px; height: 24px; }
+        .sidebar.expanded .nav-item.new-chat svg { width: 14px; height: 14px; stroke: currentColor; }
+
+        .recents-section { display: none; flex-grow: 1; overflow-y: auto; margin-top: 10px; }
+        .sidebar.expanded .recents-section { display: block; }
+        .section-title { font-size: 12px; color: var(--text-tertiary); padding: 0 10px; margin-bottom: 8px; }
+        .recent-item {
+            display: block; padding: 8px 10px; font-size: 13px; color: var(--text-secondary);
+            text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            border-radius: 6px; cursor: pointer;
+        }
+        .recent-item:hover { background-color: var(--accent-bg-hover); color: #111; }
+        .recent-item.active { background-color: var(--accent-bg-hover); color: #111; }
+
+        .empty-recents {
+            padding: 20px 10px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .user-profile-container { margin-top: auto; width: 100%; display: flex; justify-content: center; padding-bottom: 12px; }
+        .sidebar.expanded .user-profile-container { justify-content: stretch; padding-bottom: 0; }
+        .user-profile {
+            padding: 8px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border-radius: 6px;
+        }
+        .sidebar.expanded .user-profile { justify-content: flex-start; padding: 12px 8px; width: 100%; }
+        .user-profile:hover { background-color: var(--accent-bg-hover); }
+        .avatar-circle {
+            width: 32px; height: 32px; background-color: #333; color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0;
+        }
+        .sidebar.expanded .avatar-circle { width: 28px; height: 28px; margin-right: 10px; }
+        .user-info { display: none; flex-direction: column; overflow: hidden; }
+        .sidebar.expanded .user-info { display: flex; }
+        .user-name { font-size: 13px; font-weight: 600; color: #111; }
+        .user-plan { font-size: 11px; color: var(--text-tertiary); }
+
+        /* =========================================
+           3. Main Content
+           ========================================= */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            justify-content: center;
+            padding-bottom: 40px; 
+            transition: all 0.3s;
+            height: 100vh;
+            background-color: #FFFFFF;
+        }
+
+        .main-content.chat-mode {
+            justify-content: flex-start;
+            padding-bottom: 0;
+            overflow: hidden; 
+        }
+
+        /* Chat Header */
+        .chat-header {
+            width: 100%;
+            height: 56px;
+            display: none; 
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            background: white;
+        }
+        .main-content.chat-mode .chat-header { display: flex; }
+
+        .chat-title-group {
+            display: flex; align-items: center; font-size: 14px; font-weight: 500; color: #333;
+            cursor: pointer; padding: 4px 8px; border-radius: 6px;
+        }
+        .chat-title-group {
+    display: flex; 
+    align-items: center; 
+    font-size: 14px; 
+    font-weight: 500; 
+    color: #333;
+    padding: 4px 8px; 
+    border-radius: 6px;
+    gap: 6px;
+}
+
+.chat-title-group:hover { 
+    background-color: #F5F5F5; 
+}
+
+#chatTitle {
+    outline: none;
+    min-width: 100px;
+    max-width: 400px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#chatTitle[contenteditable="true"] {
+    background: white;
+    border: 2px solid var(--tyloai-blue);
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: text;
+}
+
+.title-edit-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    color: #666;
+    opacity: 0;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.chat-title-group:hover .title-edit-btn {
+    opacity: 1;
+}
+
+.title-edit-btn:hover {
+    background: #E5E5E5;
+    color: #111;
+}
+
+.title-edit-btn.editing {
+    opacity: 1;
+    color: var(--tyloai-blue);
+}
+
+        .chat-actions { display: flex; align-items: center; gap: 12px; }
+        .header-btn {
+            width: 32px; height: 32px; border-radius: 6px; border: 1px solid transparent;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            background: transparent; color: #555;
+        }
+        .header-btn:hover { background-color: #F5F5F5; }
+        .header-btn.bordered { border-color: #E5E5E5; }
+        .share-btn {
+            padding: 6px 12px; border: 1px solid #E5E5E5; border-radius: 6px; font-size: 13px;
+            font-weight: 500; color: #333; background: transparent; cursor: pointer;
+        }
+        .share-btn:hover { background-color: #F5F5F5; }
+
+        /* Points Badge Style - MOVED TO TOP RIGHT */
+        .points-display {
+            position: fixed;
+            top: 16px;
+            right: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: #555;
+            background: #F9F9F9;
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid #EAEAEA;
+            z-index: 150;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .points-val { font-weight: 600; color: var(--accent-color); }
+        .quota-val { font-weight: 600; color: var(--tyloai-blue); }
+
+        /* Dashboard Elements */
+        .dashboard-elements {
+            display: flex; flex-direction: column; align-items: center; width: 100%;
+            transition: opacity 0.2s;
+            position: relative;
+        }
+        .main-content.chat-mode .dashboard-elements { display: none; }
+        
+        .plan-badge {
+            background-color: #F2F0EE; padding: 5px 10px; border-radius: 6px;
+            font-size: 13px; color: #666; margin-bottom: 40px; font-weight: 500;
+        }
+        .plan-badge a {
+            color: var(--tyloai-blue);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .plan-badge a:hover {
+            text-decoration: underline;
+        }
+        .greeting-container { display: flex; align-items: center; margin-bottom: 32px; }
+        .greeting-icon { color: #C68977; margin-right: 16px; display: flex; align-items: center; }
+        .greeting-icon img { width: 36px; height: 36px; object-fit: contain; }
+        h1 {
+            font-family: var(--font-serif); font-size: 38px; font-weight: 400; color: #333;
+            letter-spacing: -0.8px; margin: 0;
+        }
+
+        /* =========================================
+           Chat History Area
+           ========================================= */
+        .chat-scroll-area {
+            flex: 1;
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            overflow-y: auto;
+            display: none; 
+            flex-direction: column;
+            gap: 24px;
+            margin-top: 56px;
+            margin-bottom: 120px;
+            z-index: 5;
+        }
+        
+        .main-content.chat-mode .chat-scroll-area { display: flex; }
+
+        .msg-block { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        
+        .user-msg-row { display: flex; gap: 12px; align-items: flex-start; }
+        .user-content-stack { display: flex; flex-direction: row; gap: 12px; align-items: flex-start; flex: 1; }
+        .user-bubble {
+            background-color: #F0F0F0; padding: 10px 14px; border-radius: 12px;
+            border-top-left-radius: 4px; font-size: 15px; color: #111; line-height: 1.5;
+        }
+
+        .ai-msg-row { display: flex; gap: 12px; padding-left: 0px; }
+        .ai-content-stack { width: 100%; }
+        .ai-text {
+            font-size: 15px; color: #111; line-height: 1.6; margin-bottom: 8px;
+            font-family: var(--font-sans); white-space: pre-wrap;
+        }
+        .ai-footer {
+            display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+            margin-top: 4px; opacity: 0; transition: opacity 0.5s;
+        }
+        .ai-footer.visible { opacity: 1; }
+        .ai-disclaimer {
+            font-size: 11px; color: #999; margin-right: auto;
+        }
+        .ai-action-btn {
+            background: transparent; border: none; cursor: pointer; color: #999; padding: 4px;
+            display: flex; align-items: center;
+        }
+        .ai-action-btn:hover { color: #555; }
+        .retry-text {
+            font-size: 12px; color: #666; display: flex; align-items: center; gap: 4px; cursor: pointer;
+        }
+        .ai-loading-icon { color: #D97757; margin-top: 10px; display: none; }
+
+        /* Thinking Box Styles */
+        .thinking-box {
+            border: 1px solid #E5E5E5;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background-color: #FAFAFA;
+        }
+        .thinking-header {
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+        .thinking-header:hover {
+            background-color: #F5F5F5;
+        }
+        .thinking-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+        }
+        .thinking-toggle {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.2s;
+        }
+        .thinking-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+        .thinking-content {
+            padding: 0 14px 10px 14px;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        .thinking-content.collapsed {
+            display: none;
+        }
+
+        /* =========================================
+           4. Input Area
+           ========================================= */
+        .input-wrapper {
+            width: 100%; max-width: 720px; background: white; border: 1px solid rgba(0,0,0,0.08); 
+            border-radius: 18px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04); padding: 14px;
+            position: relative; display: flex; flex-direction: column;
+            transition: box-shadow 0.2s, max-width 0.3s, border 0.2s;
+            overflow: visible; 
+            z-index: 100;
+        }
+
+        .main-content.chat-mode .input-wrapper {
+            position: absolute; bottom: 24px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.02), 0 4px 16px rgba(0,0,0,0.04);
+        }
+
+        .input-wrapper.focused {
+            border: 1px solid transparent; 
+            background-image: linear-gradient(white, white), 
+                              linear-gradient(to right, #FF0000, #FF7F00, #FFFF00, #00FF00, #0000FF, #4B0082, #9400D3);
+            background-origin: border-box; background-clip: padding-box, border-box;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        }
+
+        .input-wrapper.drag-over {
+            border: 2px dashed var(--tyloai-blue);
+            background-color: #F0F8FF;
+        }
+
+        .drag-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(55, 113, 224, 0.1);
+            border-radius: 18px;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 101;
+        }
+
+        .drag-overlay.active {
+            display: flex;
+        }
+
+        .drag-text {
+            font-size: 16px;
+            color: var(--tyloai-blue);
+            font-weight: 600;
+        }
+
+        .text-input {
+            width: 100%; min-height: 48px; border: none; resize: none; font-size: 16px;
+            font-family: var(--font-sans); color: #333; background: transparent; margin-bottom: 10px; padding: 4px;
+        }
+        .text-input::placeholder { color: #909090; }
+
+        .input-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+        .left-controls { display: flex; gap: 6px; position: relative; }
+        .control-btn {
+            width: 34px; height: 34px; border-radius: 8px; border: none; background: transparent;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; color: #666; transition: background 0.2s;
+        }
+        .control-btn:hover { background-color: #F5F5F5; }
+        .control-btn.clock-active svg { stroke: var(--tyloai-blue); color: var(--tyloai-blue); }
+        #fileInput { display: none; }
+        .right-controls { display: flex; align-items: center; gap: 12px; position: relative; }
+
+        /* Mode Icons */
+        .mode-icons-container {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .mode-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--tyloai-blue);
+        }
+
+        /* Suggestion Buttons & Content */
+        .suggestion-bar {
+            width: 100%; max-width: 720px; display: flex; gap: 8px; justify-content: center; margin-top: 12px;
+            transition: all 0.3s; flex-wrap: wrap;
+        }
+        .main-content.chat-mode .suggestion-bar { display: none; }
+        
+        .suggestion-btn {
+            padding: 8px 16px; border: 1px solid #E5E5E5; border-radius: 20px; 
+            background: white; color: #555; font-size: 13px; font-weight: 500;
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .suggestion-btn:hover, .suggestion-btn.active { background: #F5F5F5; color: #222; border-color: #DDD; }
+        
+        .suggestion-content-area {
+            width: 100%; max-width: 720px; margin-top: 16px; display: none;
+            background: white; border: 1px solid #F0F0F0; border-radius: 12px; padding: 16px;
+        }
+        .suggestion-content-area.show { display: block; animation: fadeIn 0.3s ease; }
+        
+        .suggestion-list { display: flex; flex-direction: column; gap: 8px; }
+        .suggestion-item {
+            padding: 8px 12px; background: #F9F9F9; border-radius: 8px; font-size: 14px; color: #444;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .suggestion-item:hover { background: #F0F0F0; }
+
+        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .card {
+            border: 1px solid #EAEAEA; border-radius: 8px; overflow: hidden; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .card-img { width: 100%; height: 80px; background: #F0F0F0; display: flex; align-items: center; justify-content: center; color: #AAA; }
+        .card-img svg { width: 32px; height: 32px; }
+        .card-text { padding: 10px; font-size: 12px; font-weight: 500; color: #333; text-align: center; }
+
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spinner {
+    animation: spin 0.8s linear infinite;
+}
+        /* -----------------------------------
+           Dropdowns
+           ----------------------------------- */
+        .settings-dropdown, .model-dropdown, .thinking-submenu, .style-submenu {
+            position: absolute;
+            background: white; border: 1px solid #E5E5E5; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 6px; z-index: 102;
+            display: none; flex-direction: column;
+        }
+
+        .settings-dropdown { top: 100%; left: 0; margin-top: 4px; width: 280px; }
+        .model-dropdown { top: 100%; right: 0; margin-top: 2px; width: 260px; }
+        
+        .thinking-submenu, .style-submenu {
+            left: 100%;
+            top: 0;
+            margin-left: 4px;
+            width: 280px;
+        }
+
+        .third-party-submenu {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    margin-left: 4px;
+    width: 260px;
+    background: white;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    padding: 6px;
+    z-index: 103;
+    display: none;
+    flex-direction: column;
+}
+
+.main-content.chat-mode .third-party-submenu {
+    bottom: 0;
+    top: auto;
+}
+
+.third-party-submenu.show {
+    display: flex;
+}
+
+        .main-content.chat-mode .settings-dropdown {
+            top: auto; bottom: 100%; margin-top: 0; margin-bottom: 8px;
+        }
+        .main-content.chat-mode .model-dropdown {
+            top: auto; bottom: 100%; margin-top: 0; margin-bottom: 8px;
+        }
+        .main-content.chat-mode .thinking-submenu {
+            bottom: 0;
+            top: auto;
+        }
+        .main-content.chat-mode .style-submenu {
+            bottom: 0;
+            top: auto;
+        }
+
+        .settings-dropdown.show, .model-dropdown.show, .thinking-submenu.show, .style-submenu.show { display: flex; }
+
+        /* Dropdown Items Style */
+        .menu-item, .dropdown-item {
+            padding: 10px 12px; border-radius: 8px; display: flex; align-items: center;
+            justify-content: space-between; cursor: pointer; margin-bottom: 2px;
+            position: relative;
+        }
+        .dropdown-item { align-items: flex-start; }
+        .menu-item:hover, .dropdown-item:hover { background-color: #F5F5F5; }
+        .menu-left, .item-left { display: flex; align-items: center; gap: 10px; flex-grow: 1; }
+        .item-left { flex-direction: column; align-items: flex-start; gap: 0; }
+        .menu-text-col { display: flex; flex-direction: column; }
+        .menu-title, .item-title { font-size: 14px; color: #222; }
+        .item-title { font-family: var(--font-serif); font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .menu-sub { font-size: 12px; color: #777; margin-top: 2px; }
+        .item-desc { font-family: var(--font-sans); font-size: 12px; color: #777; }
+        .pro-badge { font-size: 10px; font-weight: 700; color: var(--tyloai-blue); background: #E8F0FE; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+        .upgrade-badge { font-size: 10px; font-weight: 600; color: #555; background: #F0F0F0; padding: 2px 6px; border-radius: 10px; margin-left: 8px; border: 1px solid #E0E0E0; }
+        .pts-badge { font-size: 11px; color: #888; margin-left: auto; }
+        .menu-divider, .dropdown-divider { height: 1px; background-color: #E5E5E5; margin: 6px 0; }
+        .check-icon { color: var(--tyloai-blue); opacity: 0; }
+        .dropdown-item.selected .check-icon { opacity: 1; }
+        .dropdown-more { padding: 10px 12px; font-size: 13px; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: space-between; border-radius: 8px; }
+        .dropdown-more:hover { background-color: #F5F5F5; }
+
+        /* Custom Switch */
+        .switch { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #E0E0E0; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .2s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--tyloai-blue); }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        /* Custom Checkbox */
+        .custom-checkbox {
+            position: relative;
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .custom-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 18px;
+            width: 18px;
+            background-color: #fff;
+            border: 2px solid #D0D0D0;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .custom-checkbox:hover .checkmark {
+            border-color: var(--tyloai-blue);
+        }
+        .custom-checkbox input:checked ~ .checkmark {
+            background-color: var(--tyloai-blue);
+            border-color: var(--tyloai-blue);
+        }
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 5px;
+            top: 2px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .custom-checkbox input:checked ~ .checkmark:after {
+            display: block;
+        }
+
+        /* Model Selector */
+        .model-selector {
+            font-size: 15px; color: #444; font-weight: 600; display: flex; align-items: center;
+            cursor: pointer; padding: 6px 10px; border-radius: 8px; transition: background 0.2s; background-color: #F4F3F2; 
+        }
+        .model-selector:hover { background-color: #EAEAEA; }
+        .model-selector span { margin-right: 6px; font-family: var(--font-serif); }
+
+        /*.send-btn {
+            width: 32px; height: 32px; background-color: #D97757; border-radius: 8px; border: none;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;
+        }*/
+        .send-btn {
+    width: 32px; 
+    height: 32px; 
+    background-color: var(--accent-color); 
+    border-radius: 8px; 
+    border: none;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    cursor: pointer; 
+    transition: all 0.2s;
+}
+/* 鼠标悬停时变成深灰色 */
+.send-btn:hover {
+    background-color: #333333;
+}
+        .send-btn svg { fill: white; }
+
+        /* File Preview */
+        #filePreviewArea { display: none; margin-top: 14px; border-top: 1px solid #E5E5E5; padding-top: 14px; width: 100%; }
+        .file-card {
+            width: 160px; height: 120px; border: 1px solid #E0E0E0; border-radius: 12px; padding: 12px;
+            display: flex; flex-direction: column; justify-content: space-between; background-color: #fff;
+            position: relative; cursor: pointer; transition: border-color 0.2s;
+        }
+        .file-card:hover { border-color: #ccc; background-color: #FAFAFA; }
+        .file-card::after { content: "×"; position: absolute; top: 4px; right: 8px; font-size: 20px; color: #999; opacity: 0; transition: opacity 0.2s; }
+        .file-card:hover::after { opacity: 1; }
+        .file-info-top { display: flex; flex-direction: column; gap: 4px; }
+        .file-name {
+            font-size: 13px; 
+            font-weight: 600; 
+            color: #111; 
+            line-height: 1.3;
+            
+            display: -webkit-box;           /* 兼容旧版Safari/Chrome */
+            display: -moz-box;              /* 兼容旧版Firefox */
+            display: box;                   /* 标准属性（已废弃，但保留） */
+            
+            -webkit-line-clamp: 2;          /* WebKit私有属性 */
+            -moz-line-clamp: 2;             /* Firefox私有属性 */
+            line-clamp: 2;                  /* 标准属性（推荐） */
+            
+            -webkit-box-orient: vertical;   /* WebKit */
+            -moz-box-orient: vertical;      /* Firefox */
+            box-orient: vertical;           /* 标准 */
+            
+            overflow: hidden;               /* 关键：隐藏溢出文本 */
+            
+            /* 文本换行处理 */
+            word-break: break-word;         /* 比break-all更优雅 */
+            overflow-wrap: break-word;      /* 现代属性 */
+            
+            position: relative;
+        }
+        .file-lines { font-size: 11px; color: #888; }
+        .file-tag {
+            align-self: flex-start; font-size: 10px; font-weight: 600; color: #555; border: 1px solid #E0E0E0;
+            padding: 2px 6px; border-radius: 4px; text-transform: uppercase; background-color: #FAFAFA;
+        }
+
+        /* =========================================
+           Login Page - Full Screen
+           ========================================= */
+        .login-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            display: flex;
+            z-index: 3000;
+        }
+        .login-page.hidden {
+            display: none;
+        }
+        .login-left {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            background: #FAFAFA;
+        }
+        .login-right {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #000;
+        }
+        .login-right video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .login-content {
+            width: 100%;
+            max-width: 420px;
+        }
+        .login-logo {
+            font-family: var(--font-serif);
+            font-size: 36px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 12px;
+        }
+        .login-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+        .login-subtitle {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+        .google-login-btn {
+            width: 100%;
+            padding: 14px;
+            background: white;
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+            margin-bottom: 24px;
+        }
+        .google-login-btn:hover {
+            background: #F5F5F5;
+            border-color: #CFCFCF;
+        }
+        .google-icon {
+            width: 20px;
+            height: 20px;
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+            color: #999;
+            font-size: 13px;
+        }
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #E0E0E0;
+        }
+        .divider span {
+            padding: 0 16px;
+        }
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-input {
+            padding: 12px 14px;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: var(--font-sans);
+            transition: border-color 0.2s;
+        }
+        .form-input:focus {
+            border-color: var(--tyloai-blue);
+        }
+        .email-password-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .email-password-section.hide {
+            display: none;
+        }
+        .verification-section {
+            display: none;
+        }
+        .verification-section.show {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .email-password-section.hide {
+    display: none !important;
+}
+        .verification-info {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 13px;
+            color: #555;
+            margin-top: 4px;
+        }
+        .checkbox-group label {
+            cursor: pointer;
+            user-select: none;
+            line-height: 1.4;
+        }
+        .checkbox-group a {
+            color: var(--tyloai-blue);
+            text-decoration: none;
+        }
+        .checkbox-group a:hover {
+            text-decoration: underline;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--tyloai-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s;
+        }
+        .login-btn:hover {
+            background-color: #2860d0;
+        }
+        .login-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 13px;
+            display: none;
+            padding: 8px 12px;
+            background: #ffe6e6;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+        .success-message {
+            color: #28a745;
+            font-size: 13px;
+            display: none;
+            padding: 8px 12px;
+            background: #e6f9e6;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+/* =========================================
+   Project Page Styles
+   ========================================= */
+.project-page {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    z-index: 1500;
+}
+
+.project-page.active {
+    display: flex;
+}
+
+.project-main-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+.project-left-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #E5E5E5;
+    overflow: hidden;
+}
+
+.project-columns-container {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: #E5E5E5;
+    overflow-y: auto;
+}
+
+.project-column {
+    background: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.project-column-header {
+    padding: 16px;
+    border-bottom: 2px solid #E5E5E5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.project-column-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111;
+}
+
+.project-column-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #E0E0E0;
+}
+
+.project-column-status.active {
+    background: var(--tyloai-blue);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.project-column-content {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+}
+
+.project-debate-area,
+.project-final-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+.project-debate-header,
+.project-final-header {
+    margin-bottom: 20px;
+}
+
+.project-debate-header h3,
+.project-final-header h3 {
+    margin: 0 0 4px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #111;
+}
+
+.project-debate-header p,
+.project-final-header p {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.project-debate-content,
+.project-final-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.project-debate-message {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: #F9F9F9;
+    border-radius: 12px;
+    border-left: 4px solid var(--tyloai-blue);
+}
+
+.project-debate-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--tyloai-blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.project-debate-message.aggressive {
+    border-left-color: #dc3545;
+}
+
+.project-debate-message.aggressive .project-debate-avatar {
+    background: #dc3545;
+}
+
+.project-debate-text {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+}
+
+.project-input-wrapper {
+    border-top: 1px solid #E5E5E5;
+    padding: 16px;
+    background: white;
+}
+
+.project-input {
+    width: 100%;
+    min-height: 48px;
+    max-height: 200px;
+    border: 1px solid #E0E0E0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 15px;
+    font-family: var(--font-sans);
+    color: #333;
+    resize: none;
+    transition: border-color 0.2s;
+}
+
+.project-input:focus {
+    border-color: var(--tyloai-blue);
+    outline: none;
+}
+
+.project-input-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+}
+
+.project-model-selector {
+    padding: 6px 12px;
+    background: #F5F5F5;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #444;
+    transition: background 0.2s;
+}
+
+.project-model-selector:hover {
+    background: #EAEAEA;
+}
+
+.project-right-section {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px;
+    background: #FAFAFA;
+    overflow-y: auto;
+}
+
+.project-instructions-panel,
+.project-model-panel {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #E5E5E5;
+    padding: 20px;
+}
+
+.project-panel-header {
+    margin-bottom: 16px;
+}
+
+.project-panel-header h4 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111;
+}
+
+.project-panel-header p {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
+}
+
+.project-instructions-input {
+    width: 100%;
+    min-height: 120px;
+    border: 2px solid #E0E0E0;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    font-family: var(--font-sans);
+    color: #333;
+    resize: vertical;
+    transition: border-color 0.2s;
+}
+
+.project-instructions-input:focus {
+    border-color: var(--tyloai-blue);
+    outline: none;
+}
+
+.project-model-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.project-model-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #F9F9F9;
+    border-radius: 8px;
+}
+
+.project-checkbox {
+    position: relative;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.project-checkbox input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.project-checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 20px;
+    width: 20px;
+    background-color: #fff;
+    border: 2px solid var(--tyloai-blue);
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.project-checkbox input:checked ~ .project-checkmark {
+    background-color: var(--tyloai-blue);
+}
+
+.project-checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 3px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.project-checkbox input:checked ~ .project-checkmark:after {
+    display: block;
+}
+
+.project-model-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.project-model-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+}
+
+.project-model-select {
+    padding: 6px 8px;
+    border: 1px solid #E0E0E0;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: var(--font-sans);
+    color: #555;
+    background: white;
+    cursor: pointer;
+}
+
+.project-model-select:focus {
+    border-color: var(--tyloai-blue);
+    outline: none;
+}
+
+/* Tag for project items in sidebar */
+.project-tag {
+    display: inline-block;
+    background: #E8F0FE;
+    color: var(--tyloai-blue);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+}
+
+        /* =========================================
+   Chats History Page
+   ========================================= */
+.chats-page {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    z-index: 1500;
+}
+.chats-page.active {
+    display: flex;
+}
+.chats-sidebar {
+    width: 260px;
+    background: #FAFAFA;
+    border-right: 1px solid #E5E5E5;
+    padding: 24px 16px;
+    overflow-y: auto;
+}
+.chats-sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.chats-back-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+.chats-back-btn:hover {
+    background-color: #F0F0F0;
+}
+.chats-sidebar-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #111;
+}
+.chats-search-container {
+    position: relative;
+    margin-bottom: 20px;
+}
+.chats-search-input {
+    width: 100%;
+    padding: 10px 36px 10px 12px;
+    border: 2px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: var(--font-sans);
+    transition: border-color 0.2s;
+}
+.chats-search-input:focus {
+    border-color: var(--tyloai-blue);
+}
+.chats-search-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+    pointer-events: none;
+}
+.chats-main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 40px 60px;
+}
+.chats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.chat-history-item {
+    background: white;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.chat-history-item:hover {
+    border-color: var(--tyloai-blue);
+    box-shadow: 0 4px 12px rgba(55, 113, 224, 0.1);
+}
+.chat-history-content {
+    flex: 1;
+    min-width: 0;
+}
+.chat-history-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.chat-history-subtitle {
+    font-size: 13px;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.chat-history-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: 16px;
+}
+.chat-history-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: #666;
+    transition: all 0.2s;
+}
+.chat-history-btn:hover {
+    background: #F5F5F5;
+    color: #111;
+}
+.chat-history-btn.delete:hover {
+    background: #fee;
+    color: #dc3545;
+}
+.highlight {
+    background-color: #fff59d;
+    font-weight: 600;
+}
+.chats-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+.chats-empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+.chats-empty-text {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+        /* =========================================
+           Settings Page - Full Screen
+           ========================================= */
+        .settings-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 1500;
+        }
+        .settings-page.active {
+            display: flex;
+        }
+        .settings-sidebar {
+            width: 260px;
+            background: #FAFAFA;
+            border-right: 1px solid #E5E5E5;
+            padding: 24px 16px;
+            overflow-y: auto;
+        }
+        .settings-sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        .settings-back-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+        .settings-back-btn:hover {
+            background-color: #F0F0F0;
+        }
+        .settings-sidebar-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111;
+        }
+        .settings-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .settings-nav-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .settings-nav-item:hover {
+            background: #F0F0F0;
+            color: #111;
+        }
+        .settings-nav-item.active {
+            background: var(--tyloai-blue);
+            color: white;
+        }
+        .settings-main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px 60px;
+        }
+        .settings-section {
+            margin-bottom: 32px;
+        }
+        .settings-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 16px;
+        }
+        .settings-input, .settings-textarea, .settings-select {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px 14px;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: var(--font-sans);
+            color: #333;
+            transition: border-color 0.2s;
+        }
+        .settings-input:focus,
+        .settings-textarea:focus,
+        .settings-select:focus {
+            border-color: var(--tyloai-blue);
+        }
+        .settings-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .settings-select {
+            background: white;
+            cursor: pointer;
+        }
+        .avatar-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: #333;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 600;
+            margin-top: 12px;
+            margin-bottom: 12px;
+        }
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .delete-memory-btn {
+            padding: 10px 20px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        .delete-memory-btn:hover {
+            background-color: #c82333;
+        }
+
+        /* Memory Item Styles */
+.memory-item {
+    background: white;
+    border: 1px solid #E0E0E0;
+    border-radius: 6px;
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    transition: all 0.2s;
+}
+
+.memory-item:hover {
+    border-color: var(--tyloai-blue);
+    box-shadow: 0 2px 8px rgba(55, 113, 224, 0.1);
+}
+
+.memory-item-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.memory-item-text {
+    font-size: 13px;
+    color: #333;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.memory-item-date {
+    font-size: 11px;
+    color: #999;
+    margin-top: 4px;
+}
+
+.memory-item-delete {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    color: #999;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.memory-item-delete:hover {
+    background: #fee;
+    color: #dc3545;
+}
+
+.memory-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 13px;
+}
+        .settings-save-btn {
+            padding: 12px 24px;
+            background-color: var(--tyloai-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+        }
+        .settings-save-btn:hover {
+            background-color: #2860d0;
+        }
+
+        /* Upgrade Page */
+        .upgrade-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 1500;
+            overflow-y: auto;
+        }
+        .upgrade-page.active {
+            display: block;
+        }
+        .upgrade-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #E5E5E5;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+        .back-btn:hover {
+            background-color: #F5F5F5;
+        }
+        .upgrade-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111;
+        }
+        .upgrade-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+        .plan-card {
+            border: 2px solid #E5E5E5;
+            border-radius: 16px;
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s;
+        }
+        .plan-card:hover {
+            border-color: var(--tyloai-blue);
+            box-shadow: 0 8px 24px rgba(55, 113, 224, 0.15);
+        }
+        .plan-card.current {
+            border-color: var(--tyloai-blue);
+            background: linear-gradient(135deg, #F0F8FF 0%, #FFFFFF 100%);
+        }
+        .plan-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111;
+            margin-bottom: 8px;
+        }
+        .plan-price {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--tyloai-blue);
+            margin-bottom: 4px;
+        }
+        .plan-period {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 24px;
+        }
+        .plan-features {
+            list-style: none;
+            margin-bottom: 32px;
+            flex-grow: 1;
+        }
+        .plan-features li {
+            padding: 8px 0;
+            font-size: 14px;
+            color: #444;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .plan-features li:before {
+            content: "✓";
+            color: var(--tyloai-blue);
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .plan-btn {
+            padding: 12px;
+            border: 2px solid var(--tyloai-blue);
+            background: white;
+            color: var(--tyloai-blue);
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .plan-btn:hover {
+            background: var(--tyloai-blue);
+            color: white;
+        }
+        .plan-btn.current-btn {
+            background: #E5E5E5;
+            border-color: #E5E5E5;
+            color: #999;
+            cursor: default;
+        }
+        .plan-btn.primary {
+            background: var(--tyloai-blue);
+            color: white;
+        }
+        .plan-btn.primary:hover {
+            background: #2860d0;
+        }
+
+        /* Checkout Page */
+        .checkout-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 1500;
+            overflow-y: auto;
+        }
+        .checkout-page.active {
+            display: block;
+        }
+        .checkout-content {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+        .checkout-summary {
+            background: #F9F9F9;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 32px;
+        }
+        .checkout-summary-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .checkout-summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        font-size: 14px;
+        }
+        .checkout-total {
+        border-top: 2px solid #E5E5E5;
+        padding-top: 12px;
+        margin-top: 12px;
+        font-size: 18px;
+        font-weight: 700;
+        }
+        .payment-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        }
+        .card-element {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 12px;
+        border: 2px solid #E0E0E0;
+        border-radius: 8px;
+        }
+        .card-icon {
+        width: 40px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        color: #666;
+        border: 1px solid #DDD;
+        border-radius: 4px;
+        }
+        .card-number-input {
+        flex: 1;
+        border: none;
+        font-size: 16px;
+        font-family: monospace;
+        }
+        .card-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        }
+        .checkout-btn {
+        padding: 14px;
+        background-color: var(--tyloai-blue);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 12px;
+        }
+        .checkout-btn:hover {
+        background-color: #2860d0;
+        }
+        .checkout-btn:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+        }
+        /* Login Modal Styles */
+.login-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+}
+
+.login-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+}
+
+.login-modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    min-width: 400px;
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -45%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* =========================================
+   Project Modal Styles
+   ========================================= */
+.project-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.project-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+}
+
+.project-modal-content {
+    position: relative;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 540px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.project-modal-header {
+    padding: 24px 24px 16px 24px;
+    border-bottom: 1px solid #E5E5E5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.project-modal-header h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    color: #111;
+}
+
+.project-modal-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.project-modal-close:hover {
+    background: #F5F5F5;
+    color: #111;
+}
+
+.project-form {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.project-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.project-form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.project-form-input,
+.project-form-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: var(--font-sans);
+    color: #333;
+    transition: border-color 0.2s;
+}
+
+.project-form-input:focus,
+.project-form-textarea:focus {
+    border-color: var(--tyloai-blue);
+    outline: none;
+}
+
+.project-form-textarea {
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.project-form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.project-btn-secondary,
+.project-btn-primary {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.project-btn-secondary {
+    background: #F5F5F5;
+    color: #666;
+}
+
+.project-btn-secondary:hover {
+    background: #E5E5E5;
+}
+
+.project-btn-primary {
+    background: var(--tyloai-blue);
+    color: white;
+}
+
+.project-btn-primary:hover {
+    background: #1D4ED8;
+}
+
+.project-btn-primary:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.login-modal-content h2 {
+    margin: 0 0 10px 0;
+    font-size: 24px;
+    color: #333;
+}
+
+.login-modal-content p {
+    margin: 0 0 30px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.modal-login-btn, .modal-close-btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    margin: 5px;
+    transition: all 0.2s;
+}
+
+.modal-login-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.modal-login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.modal-close-btn {
+    background: #f0f0f0;
+    color: #666;
+}
+
+.modal-close-btn:hover {
+    background: #e0e0e0;
+}
+/* ===== CHAT ANIMATION STYLES ===== */
+.demo-container {
+    width: 100%;
+    height: 100%;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    background-color: #f9fafb;
+    position: relative;
+}
+
+.chat-window {
+    flex: 1;
+    overflow: hidden;
+    border-radius: 12px;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    position: relative;
+}
+
+.chat-messages {
+    height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-bottom: 60px;
+}
+
+.chat-message {
+    max-width: 80%;
+    padding: 16px;
+    border-radius: 12px;
+    animation: chatFadeIn 0.5s ease;
+}
+
+.user-message-demo {
+    align-self: flex-end;
+    background-color: #ede9fe;
+    color: #111827;
+}
+
+.ai-message-demo {
+    align-self: flex-start;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+}
+
+.message-content-demo {
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.response-image-demo {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    border-radius: 8px;
+    margin-top: 12px;
+    background-color: #f0f0f0;
+    aspect-ratio: 16/9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.code-block-demo {
+    background-color: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    margin-top: 12px;
+    font-size: 12px;
+    color: #333;
+    overflow-x: auto;
+    max-height: 200px;
+    white-space: pre-wrap;
+}
+
+@keyframes chatFadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.chat-fade-out {
+    animation: chatFadeOut 0.5s ease forwards;
+}
+
+@keyframes chatFadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+.privacy-shield:hover .privacy-tooltip {
+    display: block !important;
+}
+/* =========================================
+   AI Response Rendering Styles
+   ========================================= */
+.ai-text h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 16px 0 12px 0;
+    color: #111;
+}
+
+.ai-text h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 14px 0 10px 0;
+    color: #222;
+}
+
+.ai-text h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 12px 0 8px 0;
+    color: #333;
+}
+
+.ai-text p {
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+.ai-text code {
+    background-color: #F5F5F5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: #D73A49;
+}
+
+.ai-text pre {
+    background-color: #F8F8F8;
+    border: 1px solid #E1E4E8;
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+    margin: 12px 0;
+}
+
+.ai-text pre code {
+    background: none;
+    padding: 0;
+    color: #333;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.ai-text table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+    font-size: 14px;
+}
+
+.ai-text table th {
+    background-color: #F6F8FA;
+    border: 1px solid #D0D7DE;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.ai-text table td {
+    border: 1px solid #D0D7DE;
+    padding: 8px 12px;
+}
+
+.ai-text table tr:hover {
+    background-color: #F6F8FA;
+}
+
+.ai-text ul {
+    margin: 8px 0;
+    padding-left: 24px;
+}
+
+.ai-text li {
+    margin: 4px 0;
+    line-height: 1.5;
+}
+
+.ai-text a {
+    color: var(--tyloai-blue);
+    text-decoration: none;
+}
+
+.ai-text a:hover {
+    text-decoration: underline;
+}
+
+.ai-text strong {
+    font-weight: 600;
+    color: #111;
+}
+
+.ai-text em {
+    font-style: italic;
+}
+
+.math-inline {
+    display: inline;
+    margin: 0 2px;
+}
+
+.math-block {
+    display: block;
+    margin: 16px 0;
+    text-align: center;
+    overflow-x: auto;
+}
+
+.ai-text blockquote {
+    border-left: 4px solid #DDD;
+    padding-left: 16px;
+    margin: 12px 0;
+    color: #666;
+    font-style: italic;
+}
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div class="login-page" id="loginPage">
+        <div class="login-left">
+            <div class="login-content">
+                <div class="login-logo">TyloAI</div>
+                <h2 class="login-title">Your ideas, Amplified</h2>
+                <p class="login-subtitle">Privacy-first artificial intelligence that helps you create with confidence.</p>
+                <button class="google-login-btn" id="googleLoginBtn">
+                <svg class="google-icon" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Sign in with Google
+            </button>
+            
+            <div class="divider"><span>or</span></div>
+            
+            <form class="login-form" id="loginForm">
+                <div class="email-password-section" id="emailPasswordSection">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="loginPassword" required>
+                    </div>
+                    <div class="checkbox-group">
+                        <label class="custom-checkbox">
+                            <input type="checkbox" id="agreeTerms" required>
+                            <span class="checkmark"></span>
+                        </label>
+                        <label for="agreeTerms">
+                            I agree to the <a href="https://protoethik.com/privacy.html" target="_blank">Privacy Policy</a> and confirm I am 18 years or older
+                        </label>
+                    </div>
+                </div>
+                <div class="verification-section" id="verificationSection">
+                    <div class="verification-info">We've sent a verification code to your email. Please enter it below:</div>
+                    <div class="form-group">
+                        <label class="form-label">Verification Code</label>
+                        <input type="text" class="form-input" id="verificationCode" maxlength="8">
+                    </div>
+                </div>
+                <div class="error-message" id="loginError"></div>
+                <div class="success-message" id="loginSuccess"></div>
+                <button type="submit" class="login-btn" id="loginBtn">Continue</button>
+            </form>
+        </div>
+    </div>
+        <div class="login-right">
+        <div class="demo-container">
+            <div class="chat-window">
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Chat messages will be added dynamically via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upgrade Page -->
+<div class="upgrade-page" id="upgradePage">
+    <div class="upgrade-header">
+        <button class="back-btn" onclick="navigateBack()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </button>
+        <div class="upgrade-title">Choose Your Plan</div>
+    </div>
+    <div class="upgrade-content">
+        <div class="plans-grid">
+            <!-- Free Plan -->
+            <div class="plan-card current" id="freePlan">
+                <div class="plan-name">Free</div>
+                <div class="plan-price">$0</div>
+                <div class="plan-period">per month</div>
+                <ul class="plan-features">
+                    <li>3,000 points/day</li>
+                    <li>5 Post Thinking/month</li>
+                    <li>Ode-7-Flash: 50 pts/msg</li>
+                    <li>Ode-7: 300 pts/msg</li>
+                    <li>Extended Thinking: +100 pts</li>
+                    <li>Web Search: +100 pts</li>
+                    <li>Daily check-in streak bonus</li>
+                </ul>
+                <button class="plan-btn current-btn">Current Plan</button>
+            </div>
+
+            <!-- Pro Plan -->
+            <div class="plan-card">
+                <div class="plan-name">Pro</div>
+                <div class="plan-price">$9.99</div>
+                <div class="plan-period">per month</div>
+                <ul class="plan-features">
+                    <li>6,000 points/day</li>
+                    <li>15 Post Thinking/month (3 periods)</li>
+                    <li>Ode-7-Flash: Unlimited</li>
+                    <li style="display: flex; align-items: center; gap: 6px;">
+                        Ode-7: 400 pts/msg 
+                        <span class="privacy-shield" style="position: relative; display: inline-flex; align-items: center; cursor: help;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                            <div class="privacy-tooltip" style="display: none; position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px; border-radius: 8px; font-size: 12px; white-space: normal; width: 250px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                                When you use the Pro plan, every deep conversation and professional adjustment with the model will not be used to improve public models. We will not use conversation data to train any future model versions that may be open to the public.
+                                <div style="position: absolute; top: 100%; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #333;"></div>
+                            </div>
+                        </span>
+                    </li>
+                    <li>Ode-7-Reasoning: +1000 pts</li>
+                    <li>Unlimited Extended Thinking</li>
+                    <li>Web Search: +100 pts</li>
+                    <li>Monthly restore: 1x/month</li>
+                    <li>Priority support</li>
+                </ul>
+                <button class="plan-btn primary" onclick="selectPlan('pro', 9.99)">Upgrade to Pro</button>
+            </div>
+
+            <!-- Go Plan -->
+            <div class="plan-card">
+                <div class="plan-name">Go</div>
+                <div class="plan-price">$19.99</div>
+                <div class="plan-period">per month</div>
+                <ul class="plan-features">
+                    <li>9,000 points/day</li>
+                    <li>30 Post Thinking/month (3 periods)</li>
+                    <li>Ode-7-Flash: Unlimited</li>
+                    <li>Ode-7: 200 pts/msg</li>
+                    <li>Ode-7-Reasoning: +1000 pts Extended Thinking Unlimited</li>
+                    <li>Web Search: +100 pts</li>
+                    <li>2 hours/week "Unlimited Frenzy"</li>
+                    <li>Priority support</li>
+                </ul>
+                <button class="plan-btn primary" onclick="selectPlan('go', 19.99)">Upgrade to Go</button>
+            </div>
+
+            <!-- Max Plan -->
+            <div class="plan-card">
+                <div class="plan-name">Max</div>
+                <div class="plan-price">$29.99</div>
+                <div class="plan-period">per month</div>
+                <ul class="plan-features">
+                    <li>Unlimited everything</li>
+                    <li>No point system (hidden)</li>
+                    <li>Unlimited Ode-7</li>
+                    <li>Unlimited Post Thinking</li>
+                    <li>Unlimited Extended Thinking</li>
+                    <li>Unlimited Web Search</li>
+                    <li>VIP Priority Support</li>
+                    <li>Early access to features</li>
+                </ul>
+                <button class="plan-btn primary" onclick="selectPlan('max', 29.99)">Upgrade to Max</button>
+            </div>
+        </div>
+    </div>
+    <div style="text-align: center; margin-top: 40px; padding: 20px; color: #666; font-size: 14px;">
+    Not sure which plan to choose? Perhaps you can 
+    <a href="forms.html" style="color: var(--tyloai-blue); text-decoration: none; font-weight: 600;">complete this form</a> 
+    or 
+    <a href="mailto:support@tyloai.com" style="color: var(--tyloai-blue); text-decoration: none; font-weight: 600;">contact sales</a> 
+    to find the perfect plan for you.
+    </div>
+    <div id="downgradeArea" style="text-align: center; margin-bottom: 40px; display: none;">
+        <button onclick="downgradeToFree()" style="background: transparent; border: 1px solid #ccc; padding: 8px 16px; border-radius: 6px; color: #666; cursor: pointer; font-size: 13px;">
+            Downgrade to Free Plan
+        </button>
+    </div>
+</div>
+
+<!-- Project Page -->
+<div class="project-page" id="projectPage">
+    <!-- Left Sidebar (same as main sidebar) -->
+    <aside class="sidebar expanded" id="projectSidebar">
+        <div class="sidebar-header">
+            <span class="logo-text">TyloAI</span>
+            <button class="toggle-btn" onclick="toggleProjectSidebar()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                </svg>
+            </button>
+        </div>
+        <nav class="nav-list">
+            <a href="#" class="nav-item" onclick="closeProjectPage()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                <span>Back to Chat</span>
+            </a>
+        </nav>
+        <div class="recents-section" style="display: block;">
+            <div class="section-title">Project History</div>
+            <div id="projectRecentsList"></div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="project-main-content">
+        <!-- Left Section: Analysis Area -->
+        <div class="project-left-section">
+            <div class="project-columns-container" id="projectColumnsContainer">
+                <!-- Column 1: Analysis -->
+                <div class="project-column">
+                    <div class="project-column-header">
+                        <h3>Analysis</h3>
+                        <div class="project-column-status"></div>
+                    </div>
+                    <div class="project-column-content" id="analysisColumn"></div>
+                </div>
+
+                <!-- Column 2: Synthesis -->
+                <div class="project-column">
+                    <div class="project-column-header">
+                        <h3>Synthesis</h3>
+                        <div class="project-column-status"></div>
+                    </div>
+                    <div class="project-column-content" id="synthesisColumn"></div>
+                </div>
+
+                <!-- Column 3: Conclusion -->
+                <div class="project-column">
+                    <div class="project-column-header">
+                        <h3>Conclusion</h3>
+                        <div class="project-column-status"></div>
+                    </div>
+                    <div class="project-column-content" id="conclusionColumn"></div>
+                </div>
+            </div>
+
+            <!-- Debate Area (hidden initially) -->
+            <div class="project-debate-area" id="projectDebateArea" style="display: none;">
+                <div class="project-debate-header">
+                    <h3>Discussion Panel</h3>
+                    <p>Three perspectives debate the findings</p>
+                </div>
+                <div class="project-debate-content" id="projectDebateContent"></div>
+            </div>
+
+            <!-- Final Answer Area (hidden initially) -->
+            <div class="project-final-area" id="projectFinalArea" style="display: none;">
+                <div class="project-final-header">
+                    <h3>Final Answer</h3>
+                    <p>Based on our discussion</p>
+                </div>
+                <div class="project-final-content" id="projectFinalContent"></div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="project-input-wrapper">
+                <textarea class="project-input" id="projectInput" placeholder="What would you like to explore?" rows="1"></textarea>
+                <div class="project-input-controls">
+                    <div class="project-model-selector" id="projectModelSelector">
+                        <span id="projectCurrentModel">ode-7-flash</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <button class="send-btn" id="projectSendBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                            <line x1="12" y1="19" x2="12" y2="5"></line>
+                            <polyline points="5 12 12 5 19 12"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Section: Instructions & Model Selection -->
+        <div class="project-right-section">
+            <div class="project-instructions-panel">
+                <div class="project-panel-header">
+                    <h4>Instructions</h4>
+                    <p>Add instructions to tailor TyloAI's responses</p>
+                </div>
+                <textarea class="project-instructions-input" id="projectInstructionsInput" placeholder="e.g., Focus on data-driven insights, use formal language..."></textarea>
+            </div>
+
+            <div class="project-model-panel">
+                <div class="project-panel-header">
+                    <h4>Model Selection</h4>
+                    <p>Choose models for each analysis phase</p>
+                </div>
+                <div class="project-model-options">
+                    <div class="project-model-option">
+                        <label class="project-checkbox">
+                            <input type="checkbox" checked disabled>
+                            <span class="project-checkmark"></span>
+                        </label>
+                        <div class="project-model-info">
+                            <span class="project-model-name">Analysis</span>
+                            <select class="project-model-select" id="analysisModelSelect">
+                                <option value="ode-7-flash" selected>ode-7-flash</option>
+                                <option value="ode-7">ode-7</option>
+                                <option value="ode-7-reasoning">ode-7-reasoning</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="project-model-option">
+                        <label class="project-checkbox">
+                            <input type="checkbox" checked disabled>
+                            <span class="project-checkmark"></span>
+                        </label>
+                        <div class="project-model-info">
+                            <span class="project-model-name">Synthesis</span>
+                            <select class="project-model-select" id="synthesisModelSelect">
+                                <option value="ode-7-flash" selected>ode-7-flash</option>
+                                <option value="ode-7">ode-7</option>
+                                <option value="ode-7-reasoning">ode-7-reasoning</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="project-model-option">
+                        <label class="project-checkbox">
+                            <input type="checkbox" checked disabled>
+                            <span class="project-checkmark"></span>
+                        </label>
+                        <div class="project-model-info">
+                            <span class="project-model-name">Conclusion</span>
+                            <select class="project-model-select" id="conclusionModelSelect">
+                                <option value="ode-7-flash" selected>ode-7-flash</option>
+                                <option value="ode-7">ode-7</option>
+                                <option value="ode-7-reasoning">ode-7-reasoning</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chats History Page -->
+<div class="chats-page" id="chatsPage">
+    <div class="chats-sidebar">
+        <div class="chats-sidebar-header">
+            <button class="chats-back-btn" id="chatsBackBtn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <div class="chats-sidebar-title">Chat History</div>
+        </div>
+        <div class="chats-search-container">
+            <input type="text" class="chats-search-input" id="chatsSearchInput" placeholder="Search chats...">
+            <svg class="chats-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+        </div>
+    </div>
+    <div class="chats-main" id="chatsMainContent">
+        <div class="chats-list" id="chatsList">
+            <!-- Chat items will be dynamically loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Settings Page -->
+<div class="settings-page" id="settingsPage">
+    <div class="settings-sidebar">
+        <div class="settings-sidebar-header">
+            <button class="settings-back-btn" id="settingsBackBtn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <div class="settings-sidebar-title">Settings</div>
+        </div>
+        <div class="settings-nav">
+            <div class="settings-nav-item active" data-section="profile">Profile</div>
+            <div class="settings-nav-item" data-section="appearance">Appearance</div>
+            <div class="settings-nav-item" data-section="memory">Memory</div>
+            <div class="settings-nav-item" data-section="preferences">Preferences</div>
+        </div>
+    </div>
+    <div class="settings-main">
+        <div class="settings-content" id="profileSection">
+            <div class="settings-section">
+                <div class="settings-section-title">User Name</div>
+                <input type="text" class="settings-input" id="userNameInput" placeholder="Enter your name" value="User">
+            </div>
+            <div class="settings-section">
+                <div class="settings-section-title">User Avatar</div>
+                <input type="text" class="settings-input" id="userAvatarInput" placeholder="Enter avatar URL">
+                <div class="avatar-preview" id="avatarPreview">U</div>
+            </div>
+            <button class="settings-save-btn" onclick="saveSettings()">Save Changes</button>
+            <button class="logout-btn" onclick="logout()" style="margin-top: 16px; background-color: #dc3545; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">Sign Out</button>
+        </div>
+        
+        <div class="settings-content" id="appearanceSection" style="display:none;">
+            <div class="settings-section">
+                <div class="settings-section-title">Font</div>
+                <select class="settings-select" id="fontSelect">
+                    <option value="default">Default</option>
+                    <option value="serif">Serif</option>
+                    <option value="monospace">Monospace</option>
+                    <option value="Arial">Arial</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Courier New">Courier New</option>
+                </select>
+            </div>
+            <div class="settings-section">
+                <div class="settings-section-title">Chat Background</div>
+                <select class="settings-select" id="backgroundSelect">
+                    <option value="#FFFFFF">White</option>
+                    <option value="#F9F8F6">Warm Gray</option>
+                    <option value="#F5F5F5">Light Gray</option>
+                    <option value="#FFF9F0">Cream</option>
+                </select>
+            </div>
+            <button class="settings-save-btn" onclick="saveSettings()">Save Changes</button>
+        </div>
+        
+        <div class="settings-content" id="memorySection" style="display:none;">
+    <div class="settings-section">
+        <div class="settings-section-title">AI Memory</div>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <label class="switch">
+                <input type="checkbox" id="memoryEnabledToggle" checked>
+                <span class="slider"></span>
+            </label>
+            <div>
+                <div style="font-size: 14px; font-weight: 600; color: #333;">Enable AI Memory</div>
+                <div style="font-size: 12px; color: #666; margin-top: 2px;">Allow TyloAI to remember information about you</div>
+            </div>
+        </div>
+        <div class="settings-section-title" style="font-size: 14px; margin-top: 24px;">Stored Memories</div>
+        <div id="memoriesListContainer" style="max-height: 300px; overflow-y: auto; border: 2px solid #E0E0E0; border-radius: 8px; padding: 12px; margin-bottom: 12px; background: #FAFAFA;">
+            <div id="memoriesList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+        <button class="delete-memory-btn" id="deleteMemoryBtn">Delete All Memories</button>
+    </div>
+</div>
+        
+        <div class="settings-content" id="preferencesSection" style="display:none;">
+            <div class="settings-section">
+                <div class="settings-section-title">Personal Preferences</div>
+                <textarea class="settings-textarea" id="preferencesInput" placeholder="Tell TyloAI what to keep in mind when responding..."></textarea>
+            </div>
+            <button class="settings-save-btn" onclick="saveSettings()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Main App -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <span class="logo-text">TyloAI</span>
+        <button class="toggle-btn" id="toggleSidebarBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+        </button>
+    </div>
+    <nav class="nav-list">
+        <a href="#" class="nav-item new-chat" id="newChatBtn">
+            <div class="icon-circle">
+                <svg class="collapsed-icon" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" fill="transparent" stroke="currentColor" stroke-width="2"></circle>
+                    <path d="M12 7v10M7 12h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <svg class="expanded-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="display:none">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </div>
+            <span>New chat</span>
+        </a>
+        <a href="#" class="nav-item" id="chatsNavBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span>Chats</span>
+        </a>
+        <a href="#" class="nav-item" id="projectsNavBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+            <span>Projects</span>
+        </a>
+        <a href="#" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span>Artifacts</span>
+        </a>
+        <a href="#" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+            <span>Code</span>
+        </a>
+    </nav>
+    <div class="recents-section">
+        <div class="section-title recents-header">Recent</div>
+        <div id="recentsList"></div>
+    </div>
+    <div class="user-profile-container">
+        <div class="user-profile" id="userProfileBtn">
+            <div class="avatar-circle" id="sidebarAvatar">U</div>
+            <div class="user-info">
+                <span class="user-name" id="sidebarUserName">User</span>
+                <span class="user-plan" id="sidebarPlanName">Free plan</span>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<main class="main-content" id="mainContent">
+    <!-- Points Display - Fixed Top Right -->
+    <div class="points-display" id="pointsDisplay">
+        <span>Points: <span class="points-val" id="pointsVal">3000</span></span>
+        <span style="color:#DDD">|</span>
+        <span>R: <span class="quota-val" id="reasoningVal">3</span></span>
+        <span>P: <span class="quota-val" id="postVal">3</span></span>
+    </div>
+
+    <header class="chat-header">
+        <div class="chat-title-group" id="chatTitleGroup">
+    <span id="chatTitle" contenteditable="false">Conversation Title</span>
+    <button class="title-edit-btn" id="titleEditBtn" title="Edit title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+    </button>
+</div>
+        <div class="chat-actions">
+            <button class="header-btn bordered">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <button class="share-btn">Share</button>
+        </div>
+    </header>
+
+    <div class="dashboard-elements" id="dashboardElements">
+        <div class="plan-badge">
+            <span id="planBadgeText">Free plan</span> · <a onclick="navigateToUpgrade()">Upgrade</a>
+        </div>
+        <div class="greeting-container">
+            <div class="greeting-icon">
+                <img src="logo.png" alt="TyloAI Logo" onerror="this.style.display='none';this.parentElement.innerHTML='<svg width=\'36\' height=\'36\' viewBox=\'0 0 24 24\' fill=\'currentColor\'><path d=\'M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5L12 0Z\' /></svg>';">
+            </div>
+            <h1 id="greetingText">Good day, <span id="greetingUserName">User</span></h1>
+        </div>
+    </div>
+
+    <div class="chat-scroll-area" id="chatScrollArea"></div>
+
+    <div class="input-wrapper" id="inputWrapper">
+        <div class="drag-overlay" id="dragOverlay">
+            <div class="drag-text">Drop here to add to chat</div>
+        </div>
+        <textarea class="text-input" id="textInput" placeholder="How can I help you today?" rows="1"></textarea>
+        
+        <div class="input-controls">
+            <div class="left-controls">
+                <button class="control-btn" id="uploadBtn" style="border: 1px solid #E0E0E0; width: 30px; height: 30px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+                <input type="file" id="fileInput" />
+                <button class="control-btn" id="settingsBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="4" y1="21" x2="4" y2="14"></line>
+                        <line x1="4" y1="10" x2="4" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12" y2="3"></line>
+                        <line x1="20" y1="21" x2="20" y2="16"></line>
+                        <line x1="20" y1="12" x2="20" y2="3"></line>
+                        <line x1="1" y1="14" x2="7" y2="14"></line>
+                        <line x1="9" y1="8" x2="15" y2="8"></line>
+                        <line x1="17" y1="16" x2="23" y2="16"></line>
+                    </svg>
+                </button>
+                <div class="settings-dropdown" id="settingsDropdown">
+                    <div class="menu-item" id="styleMenuItem">
+                        <div class="menu-left">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M2 22s5-3 9-9 9-9 9-9"></path>
+                                <path d="M12 2a9 9 0 0 1 .5 15"></path>
+                            </svg>
+                            <span class="menu-title">Use style</span>
+                        </div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </div>
+                    <div class="style-submenu" id="styleSubmenu">
+                        <div class="menu-item" onclick="selectStyle('explanatory', this)">
+                            <div class="menu-left">
+                                <span class="menu-title">Explanatory</span>
+                            </div>
+                            <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <div class="menu-item" onclick="selectStyle('learning', this)">
+                            <div class="menu-left">
+                                <span class="menu-title">Learning</span>
+                            </div>
+                            <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <div class="menu-item" onclick="selectStyle('formal', this)">
+                            <div class="menu-left">
+                                <span class="menu-title">Formal</span>
+                            </div>
+                            <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="menu-item" id="thinkingMenuItem">
+                        <div class="menu-left">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <span class="menu-title">Thinking</span>
+                        </div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </div>
+                    <div class="thinking-submenu" id="thinkingSubmenu">
+                        <div class="menu-item">
+                            <div class="menu-left">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                <div class="menu-text-col">
+                                    <span class="menu-title">Extended thinking</span>
+                                    <span class="menu-sub">+100pts</span>
+                                </div>
+                            </div>
+                        <label class="switch">
+                                <input type="checkbox" id="extendedThinkingToggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-left">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                <div class="menu-text-col">
+                                    <span class="menu-title">Post thinking</span>
+                                    <span class="menu-sub" id="postThinkingSub">3 remaining this month</span>
+                                </div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="postThinkingToggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-left">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="2" y1="12" x2="22" y2="12"></line>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            </svg>
+                            <span class="menu-title">Web search</span>
+                        </div>
+                        <span class="pts-badge">+100pts</span>
+                        <label class="switch">
+    <input type="checkbox" id="webSearchToggle">
+    <span class="slider"></span>
+</label>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-left">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="16 18 22 12 16 6"></polyline>
+                                <polyline points="8 6 2 12 8 18"></polyline>
+                            </svg>
+                            <span class="menu-title">Coding mode</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="codingModeToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="menu-divider"></div>
+                    <div class="menu-item">
+                        <div class="menu-left">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            <span class="menu-title">Add connectors</span>
+                            <span class="pro-badge">PRO</span>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-left">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                            <span class="menu-title">Manage connectors</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="control-btn" id="clockBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </button>
+                <div class="mode-icons-container" id="modeIconsContainer"></div>
+            </div>
+            <div class="right-controls">
+                <div class="model-selector" id="modelSelector">
+                    <span id="currentModelText">ode-7-flash</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+                <div class="model-dropdown" id="modelDropdown">
+                    <div class="dropdown-item" onclick="selectModel('ode-7-reasoning', this)">
+    <div class="item-left">
+        <div class="item-title">ode-7-reasoning <span class="upgrade-badge" id="reasoningUpgradeBadge" style="display: none;">Upgrade</span></div>
+        <div class="item-desc" id="reasoningQuotaText">3 monthly uses</div>
+    </div>
+                        <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="dropdown-item" onclick="selectModel('ode-7', this)">
+                        <div class="item-left">
+                            <div class="item-title">ode-7</div>
+                            <div class="item-desc">300 pts/msg</div>
+                        </div>
+                        <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="dropdown-item selected" onclick="selectModel('ode-7-flash', this)">
+                        <div class="item-left">
+                            <div class="item-title">ode-7-flash</div>
+                            <div class="item-desc">50 pts/msg</div>
+                        </div>
+                        <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="dropdown-divider"></div>
+<div class="dropdown-more" id="moreModelsOption" style="display: none; position: relative;">
+    <span>More models</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+    
+    <!-- Third-party models submenu -->
+    <div class="third-party-submenu" id="thirdPartySubmenu" style="display: none;">
+        <div class="dropdown-item" onclick="selectThirdPartyModel('Claude-Sonnet-4-5', 800, this)">
+            <div class="item-left">
+                <div class="item-title">Claude-Sonnet-4-5</div>
+                <div class="item-desc" id="claude-cost">+800 pts</div>
+            </div>
+            <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <div class="dropdown-item" onclick="selectThirdPartyModel('Gemini-3-Pro', 700, this)">
+            <div class="item-left">
+                <div class="item-title">Gemini-3-Pro</div>
+                <div class="item-desc" id="gemini-cost">+700 pts</div>
+            </div>
+            <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <div class="dropdown-item" onclick="selectThirdPartyModel('GPT-5.1', 600, this)">
+            <div class="item-left">
+                <div class="item-title">GPT-5.1</div>
+                <div class="item-desc" id="gpt-cost">+600 pts</div>
+            </div>
+            <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <div class="dropdown-item" onclick="selectThirdPartyModel('DeepSeek-v3-2-Exp', 300, this)">
+            <div class="item-left">
+                <div class="item-title">DeepSeek-v3-2-Exp</div>
+                <div class="item-desc" id="deepseek-cost">+300 pts</div>
+            </div>
+            <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <div class="dropdown-item" onclick="selectThirdPartyModel('Claude-Haiku-4-5', 500, this)">
+            <div class="item-left">
+                <div class="item-title">Claude-Haiku-4-5</div>
+                <div class="item-desc" id="haiku-cost">+500 pts</div>
+            </div>
+            <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+    </div>
+</div>
+                </div>
+                <button class="send-btn" id="sendBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                        <line x1="12" y1="19" x2="12" y2="5"></line>
+                        <polyline points="5 12 12 5 19 12"></polyline>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div id="filePreviewArea"></div>
+    </div>
+
+    <!-- Suggestion Bar -->
+    <div class="suggestion-bar" id="suggestionBar">
+        <button class="suggestion-btn" onclick="toggleSuggestion('study')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+            Study
+        </button>
+        <button class="suggestion-btn" onclick="toggleSuggestion('coding')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+            Coding
+        </button>
+        <button class="suggestion-btn" onclick="toggleSuggestion('compare')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 3h5v5"></path>
+                <path d="M8 21H3v-5"></path>
+                <path d="M21 3l-7 7"></path>
+                <path d="M3 21l7-7"></path>
+            </svg>
+            Compare
+        </button>
+        <button class="suggestion-btn" onclick="toggleSuggestion('creative')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                <path d="M2 2l7.586 7.586"></path>
+                <circle cx="11" cy="11" r="2"></circle>
+            </svg>
+            Creative
+        </button>
+        <button class="suggestion-btn" onclick="toggleSuggestion('analysis')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            Analysis
+        </button>
+    </div>
+
+    <!-- Suggestion Content Areas -->
+    <div class="suggestion-content-area" id="studyContent">
+        <div class="suggestion-list">
+            <div class="suggestion-item" onclick="useSuggestion('Explain quantum physics like I am five years old')">
+                Explain quantum physics like I am five years old
+            </div>
+            <div class="suggestion-item" onclick="useSuggestion('Help me create a study schedule for my upcoming exams')">
+                Help me create a study schedule for my upcoming exams
+            </div>
+            <div class="suggestion-item" onclick="useSuggestion('Summarize the main themes of The Great Gatsby')">
+                Summarize the main themes of The Great Gatsby
+            </div>
+            <div class="suggestion-item" onclick="useSuggestion('What are the key differences between mitosis and meiosis?')">
+                What are the key differences between mitosis and meiosis?
+            </div>
+        </div>
+    </div>
+
+    <div class="suggestion-content-area" id="codingContent">
+        <div class="card-grid">
+            <div class="card" onclick="useSuggestion('Help me build a SaaS platform landing page with HTML/CSS')">
+                <div class="card-img">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                        <line x1="9" y1="21" x2="9" y2="9"></line>
+                    </svg>
+                </div>
+                <div class="card-text">SaaS Landing Page</div>
+            </div>
+            <div class="card" onclick="useSuggestion('Help me build a Sudoku game web page')">
+                <div class="card-img">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                        <path d="M3 9h18"></path>
+                        <path d="M3 15h18"></path>
+                        <path d="M9 3v18"></path>
+                        <path d="M15 3v18"></path>
+                    </svg>
+                </div>
+                <div class="card-text">Sudoku Game</div>
+            </div>
+            <div class="card" onclick="useSuggestion('Help me build a simple browser game like Snake')">
+                <div class="card-img">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                    </svg>
+                </div>
+                <div class="card-text">Simple Game</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="suggestion-content-area" id="compareContent">
+        <div class="suggestion-list">
+            <div class="suggestion-item" onclick="useSuggestion('Compare ode-7-reasoning vs ode-7-flash for creative writing')">
+                Compare ode-7-reasoning vs ode-7-flash for creative writing
+            </div>
+            <div class="suggestion-item" onclick="useSuggestion('Which AI model is better for coding tasks?')">
+                Which AI model is better for coding tasks?
+            </div>
+        </div>
+    </div>
+
+    <div class="suggestion-content-area" id="creativeContent">
+        <div class="suggestion-list">
+            <div class="suggestion-item" onclick="useSuggestion('Write a short sci-fi story about a robot who dreams')">
+                Write a short sci-fi story about a robot who dreams
+            </div>
+            <div class="suggestion-item" onclick="useSuggestion('Compose a poem about the ocean in the style of Robert Frost')">
+                Compose a poem about the ocean in the style of Robert Frost
+            </div>
+        </div>
+    </div>
+
+    <div class="suggestion-content-area" id="analysisContent">
+        <div class="suggestion-list">
+            <div class="suggestion-item" onclick="useSuggestion('Analyze the pros and cons of remote work based on current trends')">
+                Analyze the pros and cons of remote work based on current trends
+            </div>
+            <div class="suggestion-item" onclick="useSuggestion('Provide a financial analysis framework for a small business')">
+                Provide a financial analysis framework for a small business
+            </div>
+        </div>
+    </div>
+
+<!-- Project Creation Modal -->
+<div id="projectModal" class="project-modal" style="display: none;">
+    <div class="project-modal-overlay" onclick="closeProjectModal()"></div>
+    <div class="project-modal-content">
+        <div class="project-modal-header">
+            <h2>Create New Project</h2>
+            <button class="project-modal-close" onclick="closeProjectModal()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <form class="project-form" id="projectForm">
+            <div class="project-form-group">
+                <label class="project-form-label">Project Name <span style="color: #dc3545;">*</span></label>
+                <input type="text" class="project-form-input" id="projectNameInput" placeholder="e.g., Market Research Analysis" required maxlength="60">
+            </div>
+            <div class="project-form-group">
+                <label class="project-form-label">What are you trying to achieve? <span style="color: #dc3545;">*</span></label>
+                <textarea class="project-form-textarea" id="projectGoalInput" placeholder="Describe your goal in detail..." required rows="4"></textarea>
+            </div>
+            <div class="project-form-actions">
+                <button type="button" class="project-btn-secondary" onclick="closeProjectModal()">Cancel</button>
+                <button type="submit" class="project-btn-primary">Create Project</button>
+            </div>
+        </form>
+    </div>
+</div>
+</main>
+<!-- Login Modal -->
+<div id="loginModal" class="login-modal" style="display: none;">
+    <div class="login-modal-overlay"></div>
+    <div class="login-modal-content">
+        <h2>Please Sign In</h2>
+        <p>You need to sign in to continue using TyloAI</p>
+        <button onclick="showLoginForm()" class="modal-login-btn">Sign In</button>
+        <button onclick="closeLoginModal()" class="modal-close-btn">Continue as Guest</button>
+    </div>
+</div>
+
+    <div id="previewWarningModal" class="modal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99999; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 520px; border: 2px solid #dc3545; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: fadeIn 0.3s ease;">
+            
+            <div style="color: #dc3545; font-size: 1.6rem; margin-bottom: 1.5rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 12px; text-transform: uppercase;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                Preview Version Warning
+            </div>
+            
+            <div style="line-height: 1.6; margin-bottom: 1.5rem; text-align: left; color: #4b5563; font-size: 0.95rem;">
+                <p style="margin-bottom: 15px;">This is a <strong>PREVIEW</strong> version of TyloAI intended for testing purposes only.</p>
+                
+                <div style="background: #fff5f5; padding: 12px; border-radius: 8px; border-left: 4px solid #dc3545; margin: 15px 0;">
+                    <p style="color: #dc3545; font-weight: bold; font-size: 1.1rem; text-align: center; margin: 0;">
+                        ⚠️ DO NOT MAKE ANY PAYMENTS
+                    </p>
+                </div>
+
+                <p style="margin-bottom: 5px;">The payment system is currently <strong>simulated</strong>.</p> 
+                <p>All payments made during this preview phase <strong>WILL BE CANCELLED</strong>, and accounts downgraded to FREE before release.</p>
+            </div>
+
+            <div style="margin-bottom: 1.5rem; padding-top: 10px; border-top: 1px solid #e5e7eb; font-size: 0.9rem; color: #666; text-align: left;">
+                Feedback? Visit <a href="https://support.tyloai.com/" target="_blank" style="color: #2563EB; text-decoration: underline;">support.tyloai.com</a> or email <a href="mailto:support@tyloai.com" style="color: #2563EB; text-decoration: underline;">support@tyloai.com</a>.
+            </div>
+
+            <div style="margin-bottom: 20px; text-align: left; background: #f9fafb; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 0.85rem; line-height: 1.5; color: #374151;">
+                    <input type="checkbox" id="previewConsentCheckbox" style="margin-top: 3px; width: 16px; height: 16px; cursor: pointer; flex-shrink: 0;">
+                    <span>
+                        I agree to Protoethik Inc's <a href="https://protoethik.com/privacy.html" target="_blank" style="color: #2563EB; text-decoration: underline;">Privacy Policy</a> and <a href="https://protoethik.com/terms.html" target="_blank" style="color: #2563EB; text-decoration: underline;">Terms of Use</a>. I confirm that I will not conduct any payment processing or monetary transactions during the testing period, and acknowledge that Protoethik Inc is not responsible for any such errors.
+                    </span>
+                </label>
+            </div>
+            
+            <button id="closePreviewWarningBtn" disabled style="width: 100%; padding: 14px; background: #dc3545; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: not-allowed; font-size: 1rem; transition: all 0.2s; opacity: 0.5;">
+                I Understand & Continue
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. 获取元素
+            const modal = document.getElementById('previewWarningModal');
+            const btn = document.getElementById('closePreviewWarningBtn');
+            const checkbox = document.getElementById('previewConsentCheckbox');
+
+            // 2. 强制显示弹窗 (双重保险)
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+
+            // 3. 监听复选框：控制按钮是否可点
+            if (checkbox && btn) {
+                checkbox.addEventListener('change', function(e) {
+                    if (e.target.checked) {
+                        // ✅ 勾选了：按钮变红、变实、可点击
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                        btn.style.cursor = 'pointer';
+                        btn.style.background = '#dc3545'; // 确保颜色鲜艳
+                        btn.style.boxShadow = '0 4px 6px rgba(220, 53, 69, 0.2)';
+                    } else {
+                        // ❌ 取消勾选：按钮变灰、变虚、不可点
+                        btn.disabled = true;
+                        btn.style.opacity = '0.5';
+                        btn.style.cursor = 'not-allowed';
+                        btn.style.boxShadow = 'none';
+                    }
+                });
+            }
+
+            // 4. 监听按钮点击：关闭弹窗
+            if (btn && modal) {
+                btn.addEventListener('click', function() {
+                    if (!btn.disabled) {
+                        // 淡出动画效果
+                        modal.style.opacity = '0';
+                        modal.style.transition = 'opacity 0.3s ease';
+                        
+                        setTimeout(() => {
+                            modal.style.display = 'none';
+                            // 此时不重置 opacity 也没事，因为除非刷新页面，否则不再显示
+                        }, 300);
+                    }
+                });
+            }
+        });
+    </script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="script.js"></script>
+</body>
+</html>

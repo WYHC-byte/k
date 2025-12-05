@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Success - TyloAI</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f9fafb;
+            color: #111;
+        }
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background-color: #e6f9e6;
+            color: #28a745;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px auto;
+        }
+        .icon-circle svg { width: 40px; height: 40px; }
+        h1 { margin: 0 0 12px 0; font-size: 24px; }
+        p { color: #666; margin-bottom: 24px; line-height: 1.5; }
+        .btn {
+            background-color: #2563EB;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        .btn:hover { background-color: #1d4ed8; }
+        .status-text { font-size: 14px; color: #888; margin-top: 16px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="icon-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <h1>Payment Successful!</h1>
+        <p>Thank you for upgrading. We are activating your <strong id="planName">Pro</strong> plan features now.</p>
+        
+        <button id="actionBtn" class="btn" onclick="window.location.href = window.location.origin">Close & Return to Chat</button>
+        <div class="status-text" id="statusLog">Verifying payment...</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // 1. 初始化 Supabase (使用和你 script.js 一样的配置)
+        const SUPABASE_URL = 'https://oozxrnrxrapiylcsobgi.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9venhybnJ4cmFwaXlsY3NvYmdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0ODgwNDksImV4cCI6MjA4MDA2NDA0OX0.PSkSkt9cl8BdfjaIdQncaq1MXlwQvaczwzPTTQb8ffQ';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const statusLog = document.getElementById('statusLog');
+            const urlParams = new URLSearchParams(window.location.search);
+            const plan = urlParams.get('plan') || 'pro';
+            document.getElementById('planName').textContent = plan.charAt(0).toUpperCase() + plan.slice(1);
+
+            // 2. 获取当前用户
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session) {
+                statusLog.textContent = "Error: Please login to activate.";
+                return;
+            }
+
+            const user = session.user;
+            statusLog.textContent = `Activating ${plan} plan for ${user.email}...`;
+
+            // 3. 这里的逻辑实际上是 "Soft Verification"
+            // 既然是纯前端，我们假设用户跳到了这个页面就是付了款。
+            // 真正的生产环境应该由 Stripe Webhook 更新数据库，但你没有服务器，
+            // 所以我们在这里直接由前端更新数据库。
+            
+            let updateData = {};
+            
+            if (plan === 'pro') {
+                updateData = {
+                    plan: 'pro',
+                    points: 6000,
+                    post_thinking_quota: 5,
+                    reasoning_quota: 3, // Pro plan reasoning quota
+                    monthly_restore_used: false
+                };
+            } else if (plan === 'go') {
+                updateData = {
+                    plan: 'go',
+                    points: 9000,
+                    post_thinking_quota: 10,
+                    reasoning_quota: 999
+                };
+            } else if (plan === 'max') {
+                updateData = {
+                    plan: 'max',
+                    points: 999999,
+                    post_thinking_quota: 9999,
+                    reasoning_quota: 9999,
+                    monthly_restore_used: false
+                };
+            }
+
+            // 更新数据库
+            const { error } = await supabase
+                .from('users')
+                .update(updateData)
+                .eq('id', user.id);
+
+            if (error) {
+                console.error('Update failed:', error);
+                statusLog.textContent = "Activation failed. Contact support.";
+                statusLog.style.color = "red";
+            } else {
+                statusLog.textContent = "Activation Complete!";
+                statusLog.style.color = "green";
+                
+                // 4. 这里的核心魔法：跨标签页通讯
+                // 告诉 index.html 页面数据变了，不需要刷新
+                localStorage.setItem('plan_update_trigger', Date.now());
+                
+                // 3秒后自动关闭
+                setTimeout(() => {
+                    window.close(); // 浏览器通常不允许脚本关闭非脚本打开的窗口，但试一下无妨
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
