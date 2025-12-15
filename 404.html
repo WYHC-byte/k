@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Page not found | TyloAI</title>
+<style>
+  /* 基础重置 */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    background-color: #fbf9f6;
+    color: #191919;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    text-align: center;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Logo 容器 */
+  .logo-container {
+    margin-bottom: 32px;     /* 增加底部间距，因为Logo变大了 */
+    display: flex;
+    align-items: center;     /* 垂直居中对齐 */
+    justify-content: center;
+  }
+
+  /* 左侧主Logo: TyloAI */
+  .logo-main {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 800;
+    font-size: 4rem;         /* 增大字号到 4rem (约64px) */
+    letter-spacing: -0.03em;
+    color: #000;
+    line-height: 0.9;        /* 紧凑行高，防止撑开太多 */
+    margin-right: 16px;      /* 增加与右侧的间距 */
+  }
+
+  /* 右侧堆叠容器 */
+  .logo-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  /* 第一行: by */
+  .stack-top {
+    font-size: 1.1rem;       /* 增大到 1.1rem */
+    font-weight: 600;
+    color: #555;
+    text-transform: lowercase; 
+    margin-bottom: 4px;      /* 稍微增加两行间距 */
+    font-family: "Times New Roman", Serif; 
+    font-style: italic;
+  }
+
+  /* 第二行: PROTOETHIK */
+  .stack-bottom {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 800;
+    font-size: 1.4rem;       /* 增大到 1.4rem */
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    color: #000;
+  }
+
+  /* 斜体 I 的通用样式 */
+  .italic-i {
+    font-style: italic;
+    font-family: serif; 
+  }
+
+  /* 标题与正文 */
+  h1 {
+    font-family: "Times New Roman", Times, sans-serif;
+    font-size: 48px;
+    font-weight: 400;
+    margin-bottom: 16px;
+    letter-spacing: -1px;
+    color: #191919;
+  }
+
+  p {
+    font-size: 18px;
+    line-height: 1.5;
+    color: #555;
+    max-width: 460px;
+    margin: 0 auto 32px auto;
+  }
+
+  /* 按钮样式 */
+  .btn-home {
+    display: inline-block;
+    background-color: #191919;
+    color: #fff;
+    text-decoration: none;
+    padding: 12px 24px;
+    border-radius: 9999px;
+    font-size: 15px;
+    font-weight: 500;
+    transition: opacity .2s ease, transform .1s ease;
+  }
+  .btn-home:hover {
+    opacity: 0.85;
+    cursor: pointer;
+  }
+  .btn-home:active {
+    transform: scale(0.98);
+  }
+</style>
+</head>
+<body>
+
+<div class="logo-container">
+  <div class="logo-main">TyloAI</div>
+  
+  <div class="logo-stack">
+    <div class="stack-top">by</div>
+    <div class="stack-bottom">PROTOETH<span class="italic-i">I</span>K</div>
+  </div>
+</div>
+
+<h1>404 Boundary Detected.</h1>
+<p>To act responsibly, TyloAI cannot invent a page that doesn't exist. Hallucination is strictly prohibited in this sector.</p>
+<a href="https://tyloai.com" class="btn-home">Back to Safe Zone</a>
+
+</body>
+</html>
