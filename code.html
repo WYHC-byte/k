@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ode-code | TyloAI</title>
+    <meta name="description" content="Coding with ode-code, an Coding Agent from TyloAI, Protoethik"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sidebar: '#18181b', 
+                        main: '#202022',    
+                        border: '#2e2e32',
+                        accent: '#cc5e43',  
+                        textMain: '#ececec',
+                        textMuted: '#86868b',
+                        inputBg: '#222224',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Newsreader', 'serif'], 
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-out forwards',
+                        'slide-up': 'slideUp 0.4s ease-out forwards',
+                        'slide-down': 'slideDown 0.1s ease-out forwards',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        slideDown: { '0%': { opacity: '0', transform: 'translateY(-10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .bg-dot-pattern {
+            background-color: #202022;
+            background-image: radial-gradient(#38383a 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Markdown 渲染样式 */
+.markdown-body { color: #e5e5e5; line-height: 1.7; }
+.markdown-body h1, .markdown-body h2, .markdown-body h3 { color: #fff; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: 600; }
+.markdown-body h1 { font-size: 1.5em; border-bottom: 1px solid #333; padding-bottom: 0.3em; }
+.markdown-body h2 { font-size: 1.3em; }
+.markdown-body h3 { font-size: 1.1em; }
+.markdown-body p { margin: 0.8em 0; }
+.markdown-body ul, .markdown-body ol { margin: 0.8em 0; padding-left: 2em; }
+.markdown-body li { margin: 0.3em 0; }
+.markdown-body strong { color: #fff; font-weight: 600; }
+.markdown-body em { font-style: italic; color: #ccc; }
+
+/* 代码块样式 */
+.markdown-body pre { 
+    background: #0d0d0d; 
+    border: 1px solid #2a2a2a;
+    border-radius: 8px; 
+    padding: 16px; 
+    margin: 1em 0; 
+    overflow-x: auto;
+    position: relative;
+}
+.markdown-body pre code { 
+    background: none; 
+    padding: 0; 
+    font-family: 'JetBrains Mono', monospace; 
+    font-size: 13px; 
+    color: #e5e5e5;
+    line-height: 1.5;
+}
+.markdown-body code { 
+    background: #2a2a2a; 
+    padding: 2px 6px; 
+    border-radius: 4px; 
+    font-family: 'JetBrains Mono', monospace; 
+    font-size: 0.9em; 
+    color: #f97316;
+}
+
+/* 代码块头部 */
+.code-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    padding: 8px 12px;
+    margin-top: 1em;
+}
+.code-block-header + pre {
+    margin-top: 0;
+    border-radius: 0 0 8px 8px;
+}
+.code-block-lang {
+    font-size: 12px;
+    color: #888;
+    font-family: 'JetBrains Mono', monospace;
+}
+.code-copy-btn {
+    font-size: 12px;
+    color: #666;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+.code-copy-btn:hover { color: #fff; background: #333; }
+
+/* 表格样式 */
+.markdown-body table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin: 1em 0; 
+    font-size: 14px;
+}
+.markdown-body th, .markdown-body td { 
+    border: 1px solid #333; 
+    padding: 10px 14px; 
+    text-align: left; 
+}
+.markdown-body th { 
+    background: #1a1a1a; 
+    color: #fff; 
+    font-weight: 600; 
+}
+.markdown-body tr:nth-child(even) { background: #1a1a1a; }
+.markdown-body tr:hover { background: #252525; }
+
+/* 引用块 */
+.markdown-body blockquote {
+    border-left: 3px solid #cc5e43;
+    margin: 1em 0;
+    padding: 0.5em 1em;
+    background: #1a1a1a;
+    color: #aaa;
+}
+
+/* 分割线 */
+.markdown-body hr {
+    border: none;
+    border-top: 1px solid #333;
+    margin: 1.5em 0;
+}
+
+/* 链接 */
+.markdown-body a {
+    color: #cc5e43;
+    text-decoration: none;
+}
+.markdown-body a:hover {
+    text-decoration: underline;
+}
+
+.typing-cursor::after { content: '|'; animation: blink 1s step-start infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* CLI 仿终端样式 & GitHub 连接区域 */
+.cli-panel { background: #0f0f10; border: 1px solid #26262b; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.35); }
+.cli-header { background: linear-gradient(90deg, #1c1c1f, #151517); border-bottom: 1px solid #26262b; padding: 10px 14px; }
+.cli-line { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.55; color: #d1d5db; }
+.cli-prompt { color: #8b93ff; }
+.cli-cmd { color: #f59e0b; }
+.cli-ok { color: #34d399; }
+.cli-run { color: #f97316; }
+.cli-err { color: #f87171; }
+.cli-body { max-height: 220px; overflow-y: auto; padding: 12px 14px; }
+
+.github-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #1f1f22; border: 1px solid #2f2f34; color: #c5c6c9; font-size: 12px; }
+.github-pill .dot { width: 8px; height: 8px; border-radius: 999px; }
+.checkbox-tile { border: 1px solid #333; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; background: #1c1c1e; cursor: pointer; transition: border 0.15s, background 0.15s; }
+.checkbox-tile:hover { border-color: #444; background: #222224; }
+.checkbox-tile input { accent-color: #cc5e43; width: 16px; height: 16px; }
+.checkbox-meta { font-size: 11px; color: #8b8b90; }
+
+    </style>
+</head>
+<body class="flex h-screen w-full bg-sidebar text-textMain overflow-hidden selection:bg-accent selection:text-white">
+
+    <!-- Auth Loading Overlay -->
+    <div id="auth-loading" class="fixed inset-0 z-[100] bg-[#18181b] flex flex-col items-center justify-center text-white">
+        <svg class="animate-spin h-8 w-8 text-accent mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-sm font-mono text-gray-400">Authenticating...</span>
+    </div>
+
+    <!-- Login Confirm Modal -->
+    <div id="login-confirm-modal" class="hidden fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex items-center justify-center animate-fade-in">
+        <div class="bg-[#202022] border border-[#333] rounded-xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-accent"></div>
+            
+            <h2 class="text-2xl font-serif font-medium text-white mb-2">Welcome Back</h2>
+            <p class="text-gray-400 text-sm mb-6">We detected an active session from TyloAI.com</p>
+            
+            <div class="flex items-center gap-4 bg-[#18181b] p-4 rounded-lg border border-[#2e2e32] mb-6">
+                <div id="modal-user-avatar" class="w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-xl font-medium text-white border border-[#333]">U</div>
+                <div>
+                    <h3 id="modal-user-name" class="font-medium text-white">User</h3>
+                    <div class="flex items-center gap-2">
+                        <span id="modal-user-email" class="text-xs text-gray-500">user@example.com</span>
+                        <span id="modal-user-plan" class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-gray-700 text-gray-300">FREE</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="handleLoginConfirm()" class="flex-1 bg-white text-black hover:bg-gray-200 font-medium py-2.5 rounded-lg transition-colors text-sm">
+                    Continue as <span id="btn-user-name">User</span>
+                </button>
+                <button onclick="window.location.href='index.html'" class="px-4 py-2.5 border border-[#333] hover:bg-[#2a2a2c] rounded-lg text-gray-400 transition-colors text-sm">
+                    Switch Account
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paywall Modal -->
+    <div id="paywall-modal" class="hidden fixed inset-0 z-[95] bg-black/90 flex items-center justify-center animate-fade-in">
+        <div class="bg-[#18181b] border border-red-900/30 rounded-xl p-8 max-w-lg w-full shadow-2xl text-center">
+            <div class="w-16 h-16 bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fa-solid fa-lock text-2xl text-red-500"></i>
+            </div>
+            <h2 class="text-3xl font-serif text-white mb-3">Pro Access Required</h2>
+            <p class="text-gray-400 text-sm mb-8 leading-relaxed">
+                <span class="font-serif">ode-code</span> web interface is available exclusively for <span class="text-white font-medium">Pro, Go, and Max</span> plans.
+                <br>Free plan users can access the engine via CLI.
+            </p>
+
+            <div class="bg-[#0f0f10] border border-[#333] rounded-lg p-4 text-left mb-8 relative group">
+                <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-2 font-bold">Terminal</div>
+                <code class="font-mono text-xs text-green-400 block break-all">npm install -g @tyloai/ode-code@latest</code>
+                <code class="font-mono text-xs text-gray-300 block mt-2">ode code</code>
+                
+                <button onclick="copyCliCmd()" class="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">
+                    <i class="fa-regular fa-copy"></i>
+                </button>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <a href="index.html" class="w-full bg-accent hover:bg-[#b04d35] text-white font-medium py-3 rounded-lg transition-colors text-sm">
+                    Upgrade Plan on TyloAI
+                </a>
+                <button onclick="window.history.back()" class="text-xs text-gray-500 hover:text-gray-300 mt-2">
+                    Go Back
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onboarding Modal -->
+    <div id="onboarding-modal" class="hidden fixed inset-0 z-[80] bg-black/60 backdrop-blur-[2px] flex items-center justify-center animate-fade-in">
+        <div class="bg-[#202022] border border-[#333] rounded-xl p-8 max-w-2xl w-full shadow-2xl relative">
+            <button onclick="closeOnboarding()" class="absolute top-4 right-4 text-gray-500 hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="flex items-center gap-3 mb-6">
+                <span class="font-serif text-2xl text-white">Getting Started with ode-code</span>
+                <span class="bg-accent/20 text-accent text-[10px] px-2 py-0.5 rounded border border-accent/30">TUTORIAL</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 rounded bg-[#2a2a2c] flex items-center justify-center text-accent shrink-0"><i class="fa-brands fa-github"></i></div>
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-200">Repo Context</h4>
+                            <p class="text-xs text-gray-500 mt-1">Select a GitHub repository to give the AI context about your codebase.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 rounded bg-[#2a2a2c] flex items-center justify-center text-blue-400 shrink-0"><i class="fa-solid fa-bolt"></i></div>
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-200">Instant Mode</h4>
+                            <p class="text-xs text-gray-500 mt-1">Click the input box to enter "Flow State". Use Shift+Enter for new lines.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 rounded bg-[#2a2a2c] flex items-center justify-center text-green-400 shrink-0"><i class="fa-solid fa-layer-group"></i></div>
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-200">Thinking Modes</h4>
+                            <p class="text-xs text-gray-500 mt-1">Switch between High (Reasoning), Default, and Low (Speed) models.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 rounded bg-[#2a2a2c] flex items-center justify-center text-purple-400 shrink-0"><i class="fa-solid fa-history"></i></div>
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-200">Sessions</h4>
+                            <p class="text-xs text-gray-500 mt-1">All chats are saved automatically to your TyloAI account (encrypted).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="closeOnboarding()" class="w-full mt-8 bg-white text-black hover:bg-gray-200 font-medium py-3 rounded-lg transition-colors text-sm">
+                Start Coding
+            </button>
+        </div>
+    </div>
+
+    <!-- Focus Overlay (修改后：加入文件上传) -->
+    <div id="focus-overlay" class="fixed inset-0 bg-black/60 z-50 hidden backdrop-blur-[2px] flex flex-col items-center pt-[15vh]">
+        <div class="w-[600px] relative animate-fade-in">
+            <div class="bg-[#191919] border border-gray-700 rounded-xl shadow-2xl overflow-hidden flex flex-col">
+                <!-- 文件预览区域 -->
+                <div id="file-preview-area" class="hidden p-3 border-b border-[#333] bg-[#1a1a1a]"></div>
+
+                <!-- GitHub 连接与仓库选择 -->
+                <div id="github-connect-bar" class="p-3 border-b border-[#333] bg-[#1b1b1d] space-y-2">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-[#242428] flex items-center justify-center text-gray-200">
+                                <i class="fa-brands fa-github"></i>
+                            </div>
+                            <div>
+                                <div id="github-status-text" class="text-sm text-gray-200">GitHub Not Connected</div>
+                                <div class="text-[11px] text-gray-500">Connect to select a repo and download .tyloai-user-repo context</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button id="github-link-btn" class="px-3 py-1.5 text-xs rounded-md bg-[#222224] hover:bg-[#2c2c2f] border border-[#333] text-gray-200 transition-colors">Connect GitHub</button>
+                            <button id="github-refresh-btn" class="px-3 py-1.5 text-xs rounded-md bg-[#222224] hover:bg-[#2c2c2f] border border-[#333] text-gray-200 transition-colors" disabled>Refresh Repos</button>
+                            <button id="github-download-btn" class="px-3 py-1.5 text-xs rounded-md bg-accent hover:bg-[#b04d35] text-white transition-colors" disabled>Download Repo</button>
+                        </div>
+                    </div>
+                    <div id="github-repo-checkboxes" class="hidden grid grid-cols-1 gap-2 max-h-32 overflow-y-auto"></div>
+                    <div class="flex items-center justify-between text-[11px] text-gray-500">
+                        <span>Select a repository as context before typing</span>
+                        <span id="github-selected-pill" class="github-pill hidden"><span class="dot" style="background:#22c55e"></span><span class="repo-name">--</span></span>
+                    </div>
+                </div>
+                
+                <textarea 
+                    id="focus-input"
+                    placeholder="Ask TyloAI to write code..." 
+                    class="w-full h-[120px] bg-[#222224] p-4 text-base text-gray-200 placeholder-gray-500 resize-none focus:outline-none font-sans leading-relaxed no-scrollbar"
+                ></textarea>
+                <div class="flex justify-between items-center p-3 bg-[#222224] border-t border-[#333]">
+                    <div class="flex items-center gap-2">
+                        <!-- 文件上传按钮 -->
+                        <button id="upload-file-btn" class="w-8 h-8 bg-[#2a2a2c] hover:bg-[#333] text-gray-400 hover:text-white rounded-md flex items-center justify-center transition-colors">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                        <input type="file" id="file-input-hidden" class="hidden" />
+                        <span class="text-xs text-gray-500 font-mono">Shift + Enter for new line</span>
+                    </div>
+                    <button id="send-btn-overlay" class="w-8 h-8 bg-accent hover:bg-[#b04d35] text-white rounded-md flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="close-overlay-area" class="absolute inset-0 -z-10 w-[200vw] h-[200vh] -translate-x-1/2 -translate-y-1/2 cursor-default"></div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="w-[340px] flex flex-col border-r border-border bg-[#191919] relative z-20 flex-shrink-0">
+        <div class="p-4 pt-5 relative">
+            <div class="flex items-center gap-3 mb-6">
+                <h1 class="text-xl tracking-tight cursor-pointer" onclick="window.location.reload()">
+                    <span class="font-serif font-medium text-white text-2xl">ode</span>
+                    <span class="font-serif font-medium text-white text-2xl">-</span>
+                    <span class="font-sans font-normal text-gray-300">Code</span>
+                </h1>
+                <span class="bg-[#2a2a2d] text-[10px] text-gray-400 px-2 py-0.5 rounded-full border border-[#333] font-medium tracking-wide">PREVIEW</span>
+            </div>
+
+            <div class="relative group">
+                <textarea 
+                    id="sidebar-trigger-input"
+                    placeholder="Ask TyloAI to write code..." 
+                    class="w-full h-[88px] bg-[#222224] border border-[#333] rounded-lg p-3 text-sm text-gray-200 placeholder-gray-500 resize-none focus:outline-none transition-colors font-sans leading-relaxed cursor-text"
+                    readonly
+                ></textarea>
+                <div class="absolute bottom-2 right-2 w-7 h-7 bg-[#3a3a3c] rounded-md flex items-center justify-center pointer-events-none">
+                    <i class="fa-solid fa-arrow-up text-xs text-gray-400"></i>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 mt-3 relative select-none">
+                <div class="relative">
+                    <button id="repo-btn" class="flex items-center justify-between gap-2 bg-[#222224] hover:bg-[#2a2a2c] border border-[#333] rounded-md px-3 py-1.5 text-xs text-gray-300 transition-colors w-[140px]">
+                        <div class="flex items-center gap-2 overflow-hidden">
+                            <i class="fa-brands fa-github text-gray-400"></i>
+                            <span id="repo-text" class="truncate">Repo Not Connected</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-gray-500"></i>
+                    </button>
+                    <div id="repo-dropdown" class="hidden absolute top-full left-0 mt-1 w-[200px] bg-[#222224] border border-[#333] rounded-md shadow-xl z-50 animate-slide-down py-1">
+                        <div class="px-3 py-2 border-b border-[#333] text-[10px] font-bold text-gray-500 uppercase tracking-wider">Select Repository</div>
+                        <div id="repo-menu-list" class="max-h-[160px] overflow-y-auto">
+                            <div class="text-[11px] text-gray-500 px-3 py-2">Available repositories will appear here after connection</div>
+                        </div>
+                        <div class="border-t border-[#333] px-3 py-2 text-[11px] text-gray-500">If you don't see repos, click "Refresh Repos"</div>
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <button id="mode-btn" class="flex items-center justify-between gap-2 bg-[#222224] hover:bg-[#2a2a2c] border border-[#333] rounded-md px-3 py-1.5 text-xs text-gray-300 transition-colors w-[110px]">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-cloud text-gray-400"></i>
+                            <span id="mode-text">Default</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-gray-500"></i>
+                    </button>
+                    <div id="mode-dropdown" class="hidden absolute top-full left-0 mt-1 w-[110px] bg-[#222224] border border-[#333] rounded-md shadow-xl z-50 animate-slide-down py-1">
+                        <div class="mode-option cursor-pointer px-3 py-2 hover:bg-[#2a2a2c] text-xs text-gray-300 flex items-center justify-between" data-value="High"><span>High</span></div>
+                        <div class="mode-option cursor-pointer px-3 py-2 hover:bg-[#2a2a2c] text-xs text-gray-300 flex items-center justify-between bg-[#2a2a2c]" data-value="Default"><span>Default</span><i class="fa-solid fa-check text-accent text-[10px]"></i></div>
+                        <div class="mode-option cursor-pointer px-3 py-2 hover:bg-[#2a2a2c] text-xs text-gray-300 flex items-center justify-between" data-value="Low"><span>Low</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-4 py-2 mt-2 flex justify-between items-center text-xs text-gray-500 font-medium uppercase tracking-wider">
+            <span>Sessions</span>
+            <div class="flex items-center gap-3">
+                <div onclick="createNewSession()" class="flex items-center gap-1 cursor-pointer hover:text-gray-300 hover:text-accent transition-colors" title="New Session">
+                    <i class="fa-solid fa-plus"></i>
+                </div>
+                <div onclick="openOnboarding()" class="flex items-center gap-1 cursor-pointer hover:text-gray-300" title="Help">
+                    <i class="fa-solid fa-circle-question"></i>
+                </div>
+            </div>
+        </div>
+
+        <div id="session-list" class="flex-1 overflow-y-auto px-2 pb-4">
+            <div id="empty-session-state" class="h-32 flex flex-col items-center justify-center">
+                <span class="text-sm text-gray-600 font-medium">No sessions</span>
+            </div>
+            <div id="active-sessions-list" class="flex flex-col gap-0.5 hidden"></div>
+        </div>
+        
+        <div class="p-4 border-t border-transparent mt-auto flex items-center gap-4 text-gray-500">
+            <div id="user-avatar-display" class="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-[10px] text-white font-medium cursor-pointer hover:ring-2 ring-gray-700">U</div>
+            <button class="hover:text-gray-300 transition-colors"><i class="fa-regular fa-comment text-sm"></i></button>
+            <button class="hover:text-gray-300 transition-colors"><i class="fa-solid fa-bullhorn text-sm transform -rotate-12"></i></button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 relative bg-dot-pattern flex flex-col h-full overflow-hidden">
+        
+        <div id="chat-header" class="hidden h-14 border-b border-[#2e2e32] flex items-center justify-between px-6 bg-[#202022]">
+            <div class="flex items-center gap-2 text-sm text-gray-300">
+                <span id="header-title" class="font-medium">New Session</span>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-gray-500">
+                <span id="work-timer" class="hidden flex items-center gap-1.5 text-accent font-mono">
+                    <i class="fa-solid fa-clock"></i>
+                    <span id="timer-display">00:00</span>
+                </span>
+                <span class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-green-500"></div> connected</span>
+            </div>
+        </div>
+        <div id="start-screen" class="flex-1 flex flex-col items-center justify-center gap-6 transform -translate-y-8">
+            <svg width="64" height="64" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 opacity-90">
+                <g fill="#d97757"> 
+                    <rect x="5" y="4" width="6" height="1" />
+                    <rect x="4" y="5" width="8" height="1" />
+                    <rect x="3" y="6" width="10" height="1" />
+                    <rect x="3" y="7" width="2" height="1" />
+                    <rect x="7" y="7" width="2" height="1" />
+                    <rect x="11" y="7" width="2" height="1" />
+                    <rect x="3" y="8" width="10" height="1" />
+                    <rect x="3" y="9" width="10" height="1" />
+                    <rect x="3" y="10" width="3" height="1" /> 
+                    <rect x="7" y="10" width="2" height="1" />
+                    <rect x="10" y="10" width="3" height="1" />
+                    <rect x="3" y="11" width="1" height="1" />
+                    <rect x="5" y="11" width="1" height="1" />
+                    <rect x="10" y="11" width="1" height="1" />
+                    <rect x="12" y="11" width="1" height="1" />
+                </g>
+            </svg>
+            <p class="font-mono text-gray-300 text-sm tracking-wide">let's git together and code</p>
+        </div>
+
+        <div id="chat-interface" class="hidden flex-1 overflow-y-auto p-6 md:p-10 scroll-smooth">
+            <div id="messages-container" class="max-w-3xl mx-auto flex flex-col gap-6 pb-20"></div>
+        </div>
+
+        <!-- CLI Log Panel (TyloAI Code / Codex CLI 风格) -->
+        <div id="cli-panel" class="hidden absolute right-4 bottom-4 w-[420px] cli-panel">
+            <div class="cli-header flex items-center justify-between">
+                <div class="flex items-center gap-2 text-xs text-gray-300">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span class="font-mono">ode-code · CLI</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="cli-clear" class="text-[11px] text-gray-500 hover:text-gray-200">clear</button>
+                    <button id="cli-collapse" class="text-[11px] text-gray-500 hover:text-gray-200" data-collapsed="false">collapse</button>
+                </div>
+            </div>
+            <div id="cli-body" class="cli-body space-y-1"></div>
+        </div>
+    </main>
+
+    <script>
+        // ==========================================
+        // 1. API CONFIGURATION (从 index.html 复制)
+        // ==========================================
+        const API_CONFIG = {
+            baseUrl: 'https://tyloai-api-proxy.wuyihu7.workers.dev',
+            models: {
+                'ode-7-flash': 'gemini-2.5-flash-lite-preview-09-2025-nothinking',
+                'ode-7': 'gemini-2.5-flash-lite-preview-09-2025-nothinking',
+                'ode-7-reasoning': 'deepseek-r1-distill-llama-70b',
+            }
+        };
+
+        // GitHub Cloudflare Worker (前端占位符)
+        const GITHUB_WORKER_BASE = 'https://ode-code-github.wuyihu7.workers.dev';
+        // const GITHUB_CLIENT_ID = 'Iv23lif9HDGIfUy4FPiH';
+        const GITHUB_STATE_KEY = 'tyloai_github_state_v1';
+        const GITHUB_TOKEN_KEY = 'tyloai_github_token_v1';
+
+        // ==========================================
+        // 2. SUPABASE CONFIGURATION
+        // ==========================================
+        const SUPABASE_URL = 'https://oozxrnrxrapiylcsobgi.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9venhybnJ4cmFwaXlsY3NvYmdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0ODgwNDksImV4cCI6MjA4MDA2NDA0OX0.PSkSkt9cl8BdfjaIdQncaq1MXlwQvaczwzPTTQb8ffQ';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ==========================================
+        // 3. STATE MANAGEMENT
+        // ==========================================
+        let currentUser = null;
+        let currentChatId = null;
+        let userPlan = 'free';
+        let currentFileContent = null; // 存储文件内容
+        let sessionContext = []; // 当前 session 的上下文（独立）
+        let currentThinkingMode = 'Default'; // Low / Default / High
+        let workTimer = null;
+        let workStartTime = null;
+        let githubToken = null;
+        let githubRepos = [];
+        let selectedRepo = null;
+        let cliCollapsed = false;
+    // ==========================================
+    // 4. AUTHENTICATION & PLAN CHECK
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', async () => {
+        // 恢复 GitHub 登录态
+        githubToken = sessionStorage.getItem(GITHUB_TOKEN_KEY);
+        initGithubUI();
+        window.addEventListener('message', handleGithubMessage);
+
+        const { data: { session } } = await supabase.auth.getSession();
+        const loadingOverlay = document.getElementById('auth-loading');
+
+        if (session) {
+            currentUser = session.user;
+            await checkUserPlan(currentUser.id);
+        } else {
+            loadingOverlay.innerHTML = `
+                <div class="text-center">
+                    <p class="mb-4">No active session found.</p>
+                    <a href="index.html" class="text-accent underline">Log in at TyloAI first</a>
+                </div>
+            `;
+        }
+    });
+
+    async function checkUserPlan(userId) {
+        try {
+            const { data: userProfile, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', userId)
+                .single();
+
+            if (error) throw error;
+
+            // Populate Modal
+            document.getElementById('modal-user-name').innerText = userProfile.user_name || 'User';
+            document.getElementById('btn-user-name').innerText = userProfile.user_name || 'User';
+            document.getElementById('modal-user-email').innerText = currentUser.email;
+            document.getElementById('modal-user-plan').innerText = userProfile.plan.toUpperCase();
+            
+            const avatarEl = document.getElementById('modal-user-avatar');
+            if (userProfile.avatar_url) {
+                avatarEl.innerHTML = `<img src="${userProfile.avatar_url}" class="w-full h-full rounded-full object-cover">`;
+                document.getElementById('user-avatar-display').innerHTML = `<img src="${userProfile.avatar_url}" class="w-full h-full rounded-full object-cover">`;
+            } else {
+                avatarEl.innerText = (userProfile.user_name || 'U').charAt(0).toUpperCase();
+                document.getElementById('user-avatar-display').innerText = (userProfile.user_name || 'U').charAt(0).toUpperCase();
+            }
+
+            userPlan = userProfile.plan;
+            document.getElementById('auth-loading').classList.add('hidden');
+            document.getElementById('login-confirm-modal').classList.remove('hidden');
+
+        } catch (err) {
+            console.error("Error fetching user profile:", err);
+            document.getElementById('auth-loading').innerHTML = "Error loading profile.";
+        }
+    }
+
+    function handleLoginConfirm() {
+        document.getElementById('login-confirm-modal').classList.add('hidden');
+        const allowedPlans = ['pro', 'go', 'max'];
+        if (!allowedPlans.includes(userPlan)) {
+            document.getElementById('paywall-modal').classList.remove('hidden');
+        } else {
+            loadCodeSessions();
+            if (!localStorage.getItem('ode_onboarding_seen')) {
+                openOnboarding();
+            }
+        }
+    }
+
+    function copyCliCmd() {
+        navigator.clipboard.writeText('npm install -g @tyloai/ode-code@latest');
+        alert('Command copied!');
+    }
+
+    function openOnboarding() {
+        document.getElementById('onboarding-modal').classList.remove('hidden');
+        localStorage.setItem('ode_onboarding_seen', 'true');
+    }
+    function closeOnboarding() {
+        document.getElementById('onboarding-modal').classList.add('hidden');
+    }
+
+    // ==========================================
+    // 5. CODE SESSIONS MANAGEMENT (独立上下文)
+    // ==========================================
+    async function loadCodeSessions() {
+        const { data: sessions, error } = await supabase
+            .from('code_sessions')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('updated_at', { ascending: false });
+
+        if (sessions && sessions.length > 0) {
+            const list = document.getElementById('active-sessions-list');
+            const empty = document.getElementById('empty-session-state');
+            list.innerHTML = '';
+            empty.classList.add('hidden');
+            list.classList.remove('hidden');
+
+            sessions.forEach(session => {
+                const item = document.createElement('div');
+                item.className = 'group flex items-center justify-between px-3 py-2 rounded-md bg-[#222224] border border-[#333] cursor-pointer text-gray-200 mb-1 hover:border-gray-500 transition-colors';
+                item.onclick = () => loadSession(session.id);
+                const date = new Date(session.updated_at);
+                const now = new Date();
+                const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+                const timeStr = diffDays === 0 ? 'today' : `${diffDays}d ago`;
+
+                item.innerHTML = `
+                    <span class="text-xs truncate w-[180px] font-sans">${session.title}</span>
+                    <span class="text-[10px] text-gray-500">${timeStr}</span>
+                `;
+                list.appendChild(item);
+            });
+        }
+    }
+
+    async function loadSession(sessionId) {
+        const { data, error } = await supabase
+            .from('code_sessions')
+            .select('*')
+            .eq('id', sessionId)
+            .single();
+
+        if (data) {
+            currentChatId = data.id;
+            sessionContext = data.messages || []; // 加载独立上下文
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('chat-header').classList.remove('hidden');
+            document.getElementById('chat-interface').classList.remove('hidden');
+            document.getElementById('header-title').innerText = data.title;
+            
+            const container = document.getElementById('messages-container');
+            container.innerHTML = '';
+
+            sessionContext.forEach(msg => {
+                renderMessage(msg.role, msg.content);
+            });
+            
+            const chatInterface = document.getElementById('chat-interface');
+            setTimeout(() => chatInterface.scrollTop = chatInterface.scrollHeight, 100);
+        }
+    }
+
+    async function saveCurrentSession(messageObj) {
+        sessionContext.push(messageObj);
+        
+        if (!currentChatId) {
+            currentChatId = 'code_' + Date.now();
+            const title = messageObj.content.substring(0, 30) + (messageObj.content.length > 30 ? '...' : '');
+            
+            const list = document.getElementById('active-sessions-list');
+            document.getElementById('empty-session-state').classList.add('hidden');
+            list.classList.remove('hidden');
+            const item = document.createElement('div');
+            item.className = 'group flex items-center justify-between px-3 py-2 rounded-md bg-[#222224] border border-[#333] cursor-pointer text-gray-200 mb-1 hover:border-gray-500 transition-colors animate-fade-in';
+            item.innerHTML = `<span class="text-xs truncate w-[180px] font-sans">${title}</span><span class="text-[10px] text-gray-500">now</span>`;
+            item.onclick = () => loadSession(currentChatId);
+            list.prepend(item);
+            document.getElementById('header-title').innerText = title;
+
+            await supabase.from('code_sessions').insert({
+                id: currentChatId,
+                user_id: currentUser.id,
+                title: title,
+                messages: sessionContext,
+                updated_at: new Date().toISOString()
+            });
+        } else {
+            await supabase.from('code_sessions').update({
+                messages: sessionContext,
+                updated_at: new Date().toISOString()
+            }).eq('id', currentChatId);
+        }
+    }
+
+    // ==========================================
+    // 6. FILE UPLOAD LOGIC (从 index.html script.js 复制)
+    // ==========================================
+    document.getElementById('upload-file-btn').addEventListener('click', () => {
+        document.getElementById('file-input-hidden').click();
+    });
+
+    document.getElementById('file-input-hidden').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const ext = file.name.split('.').pop().toUpperCase() || 'FILE';
+        const mockLines = Math.floor(Math.random() * 200) + 10;
+
+        try {
+            const text = await readFileContent(file);
+            const lines = text.split('\n').length;
+
+            // 显示文件预览卡片
+            const previewArea = document.getElementById('file-preview-area');
+            previewArea.classList.remove('hidden');
+            previewArea.innerHTML = `
+                <div class="file-card flex items-center justify-between bg-[#222224] border border-[#333] rounded-lg p-3 relative group" onclick="removeFile()">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-[#2a2a2c] rounded flex items-center justify-center text-xs font-bold text-gray-400">${ext}</div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-200 truncate max-w-[300px]">${file.name}</div>
+                            <div class="text-xs text-gray-500">${lines} lines</div>
+                        </div>
+                    </div>
+                    <button class="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+            `;
+
+            // 存储文件内容（带格式）
+            currentFileContent = `
+<file_attachment>
+Filename: ${file.name}
+Type: ${ext}
+Content:
+\`\`\`${ext.toLowerCase()}
+${text}
+\`\`\`
+</file_attachment>
+`;
+    console.log("✅ File parsed successfully:", file.name);
+        } catch (error) {
+            console.error("Read file error:", error);
+            alert("Failed to read file. Please upload text-based files only.");
+            currentFileContent = null;
+        }
+    });
+
+    function readFileContent(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            if (file.size > 1024 * 1024) {
+                reject(new Error("File too large (Max 1MB)"));
+                return;
+            }
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(e);
+            reader.readAsText(file);
+        });
+    }
+
+    window.removeFile = function() {
+        document.getElementById('file-preview-area').classList.add('hidden');
+        document.getElementById('file-preview-area').innerHTML = '';
+        document.getElementById('file-input-hidden').value = '';
+        currentFileContent = null;
+    }
+
+    // ==========================================
+    // 6.5 GITHUB 集成（纯前端 + CF Worker）
+    // ==========================================
+    function isGithubConfigured() {
+    // 现在 ID 藏在 Worker 里了，前端只需要检查 Worker 地址是否已配置即可
+    return !GITHUB_WORKER_BASE.includes('YOUR_WORKER_URL');
+}
+
+    function initGithubUI() {
+        const statusEl = document.getElementById('github-status-text');
+        const linkBtn = document.getElementById('github-link-btn');
+        const refreshBtn = document.getElementById('github-refresh-btn');
+        const downloadBtn = document.getElementById('github-download-btn');
+        const pill = document.getElementById('github-selected-pill');
+        const repoText = document.getElementById('repo-text');
+
+        if (!statusEl) return; // 早期渲染保护
+
+        if (!isGithubConfigured()) {
+            statusEl.textContent = 'We’re sorry, but something went wrong. Please try again later or contact us at support.tyloai.com.';
+            linkBtn.disabled = true;
+            refreshBtn.disabled = true;
+            downloadBtn.disabled = true;
+            return;
+        }
+
+        linkBtn.disabled = false;
+        refreshBtn.disabled = !githubToken;
+        downloadBtn.disabled = !selectedRepo;
+
+        if (githubToken) {
+            statusEl.textContent = '已Connect GitHub · 可以Refresh Repos列表';
+            logCli('github auth restored from session', 'ok');
+            fetchGithubRepos();
+        } else {
+            statusEl.textContent = 'GitHub Not Connected';
+        }
+
+        if (selectedRepo && pill) {
+            pill.querySelector('.repo-name').textContent = selectedRepo.full_name;
+            pill.classList.remove('hidden');
+            if (repoText) repoText.textContent = selectedRepo.full_name.length > 16 ? selectedRepo.full_name.slice(0, 16) + '…' : selectedRepo.full_name;
+        }
+    }
+
+    function startGithubOAuth() {
+        // 1. 检查配置 (这里只检查 Worker URL 即可，因为 Client ID 在后端)
+        /*if (GITHUB_WORKER_BASE.includes('YOUR_WORKER_URL')) {
+            alert('请先配置 Worker URL');
+            return;
+        }*/
+
+        // 2. 生成随机 state 防止 CSRF 攻击
+        const state = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2, 10));
+        sessionStorage.setItem(GITHUB_STATE_KEY, state);
+
+        // 3. ✅ 关键修改：只传 state 和 origin
+        // Worker 会自己从环境变量里读取 Client ID 并组装跳转链接
+        const authUrl = `${GITHUB_WORKER_BASE}/authorize?state=${state}&origin=${encodeURIComponent(window.location.origin)}`;
+        
+        // 4. 打开弹窗
+        const win = window.open(authUrl, 'tyloai-github', 'width=520,height=720');
+        
+        if (!win) {
+             alert('Please allow browser pop-ups to complete GitHub authorization.');
+        }
+        
+        logCli(`open ${authUrl}`, 'run');
+    }
+
+    async function fetchGithubRepos(showToast = false) {
+        if (!githubToken || !isGithubConfigured()) return;
+        try {
+            const res = await fetch(`${GITHUB_WORKER_BASE}/api/repos`, {
+                headers: { 'Authorization': `Bearer ${githubToken}` }
+            });
+            if (!res.ok) throw new Error(`GitHub repos error ${res.status}`);
+            const data = await res.json();
+            githubRepos = Array.isArray(data) ? data : [];
+            renderRepoCheckboxes();
+            populateRepoDropdown();
+            const refreshEl = document.getElementById('github-refresh-btn');
+            if (refreshEl) refreshEl.disabled = false;
+            if (showToast) logCli('repos refreshed', 'ok');
+        } catch (err) {
+            console.error(err);
+            logCli('fetch repos failed: ' + err.message, 'err');
+            const statusEl = document.getElementById('github-status-text');
+            if (statusEl) statusEl.textContent = 'Failed to retrieve the repository. Please try again.';
+        }
+    }
+
+    function handleGithubMessage(event) {
+        const data = event.data || {};
+        if (data.source !== 'tyloai-github') return;
+        const expected = sessionStorage.getItem(GITHUB_STATE_KEY);
+        if (data.state && expected && data.state !== expected) {
+            logCli('GitHub state mismatch, ignored.', 'err');
+            return;
+        }
+        if (data.error) {
+            logCli('github auth error: ' + data.error, 'err');
+            alert('GitHub Authorization Failed:' + data.error);
+            return;
+        }
+        if (data.token) {
+            githubToken = data.token;
+            sessionStorage.setItem(GITHUB_TOKEN_KEY, githubToken);
+            document.getElementById('github-status-text').textContent = '已Connect GitHub';
+            document.getElementById('github-refresh-btn').disabled = false;
+            logCli('github auth ok', 'ok');
+            fetchGithubRepos(true);
+        }
+    }
+
+    function renderRepoCheckboxes() {
+        const box = document.getElementById('github-repo-checkboxes');
+        if (!box) return;
+        if (!githubRepos || githubRepos.length === 0) {
+            box.classList.add('hidden');
+            box.innerHTML = '';
+            return;
+        }
+        box.classList.remove('hidden');
+        box.innerHTML = githubRepos.map((repo, idx) => {
+            const checked = selectedRepo && selectedRepo.full_name === repo.full_name ? 'checked' : '';
+            return `
+                <label class="checkbox-tile" data-full="${repo.full_name}">
+                    <input type="radio" name="gh-repo" value="${repo.full_name}" ${checked} />
+                    <div>
+                        <div class="text-sm text-gray-200">${repo.full_name}</div>
+                        <div class="checkbox-meta">${repo.default_branch || 'main'} · ⭐${repo.stargazers_count || 0}</div>
+                    </div>
+                </label>
+            `;
+        }).join('');
+
+        box.querySelectorAll('input[type="radio"]').forEach(input => {
+            input.addEventListener('change', (e) => selectRepo(e.target.value));
+        });
+    }
+
+    function populateRepoDropdown() {
+        const menu = document.getElementById('repo-menu-list');
+        if (!menu) return;
+        if (!githubRepos || githubRepos.length === 0) {
+            menu.innerHTML = '<div class="text-[11px] text-gray-500 px-3 py-2">No repositories available. Please click to connect GitHub.</div>';
+            return;
+        }
+        menu.innerHTML = githubRepos.map(repo => {
+            const active = selectedRepo && selectedRepo.full_name === repo.full_name;
+            return `
+                <div class="repo-item cursor-pointer px-3 py-2 hover:bg-[#2a2a2c] text-xs text-gray-300 flex items-center justify-between" data-full="${repo.full_name}">
+                    <div class="flex items-center gap-2"><i class="fa-regular fa-folder text-gray-500"></i> ${repo.full_name}</div>
+                    ${active ? '<i class="fa-solid fa-check text-accent text-[10px]"></i>' : ''}
+                </div>`;
+        }).join('');
+        menu.querySelectorAll('.repo-item').forEach(el => {
+            el.addEventListener('click', () => selectRepo(el.getAttribute('data-full')));
+        });
+    }
+
+    function selectRepo(fullName) {
+        const repo = githubRepos.find(r => r.full_name === fullName);
+        if (!repo) return;
+        selectedRepo = repo;
+        const pill = document.getElementById('github-selected-pill');
+        if (pill) {
+            pill.querySelector('.repo-name').textContent = repo.full_name;
+            pill.classList.remove('hidden');
+        }
+        const repoText = document.getElementById('repo-text');
+        if (repoText) repoText.textContent = repo.full_name.length > 16 ? repo.full_name.slice(0, 16) + '…' : repo.full_name;
+        const downloadBtn = document.getElementById('github-download-btn');
+        if (downloadBtn) downloadBtn.disabled = false;
+        populateRepoDropdown();
+        logCli(`repo selected ${repo.full_name}`, 'ok');
+    }
+
+    async function downloadSelectedRepo() {
+        if (!selectedRepo) {
+            alert('请选择一个仓库');
+            return;
+        }
+        if (!isGithubConfigured()) {
+            alert('We’re sorry, but something went wrong. Please try again later or contact us at support.tyloai.com.');
+            return;
+        }
+        if (!githubToken) {
+            alert('Please complete the GitHub connection first.');
+            return;
+        }
+        const branch = selectedRepo.default_branch || 'main';
+        const url = `${GITHUB_WORKER_BASE}/api/download?owner=${encodeURIComponent(selectedRepo.owner.login || selectedRepo.full_name.split('/')[0])}&repo=${encodeURIComponent(selectedRepo.name || selectedRepo.full_name.split('/')[1])}&ref=${encodeURIComponent(branch)}`;
+        logCli(`download ${selectedRepo.full_name}#${branch}`, 'run');
+        try {
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${githubToken}` }});
+            if (!res.ok) throw new Error(`Download failed. ${res.status}`);
+            const blob = await res.blob();
+            const filename = `.tyloai-user-repo-${selectedRepo.full_name.replace('/', '-')}.zip`;
+            downloadFile(blob, filename);
+            logCli(`saved ${filename}`, 'ok');
+        } catch (err) {
+            console.error(err);
+            logCli('download error: ' + err.message, 'err');
+            alert('Download failed.' + err.message);
+        }
+    }
+
+    function downloadFile(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    // ==========================================
+    // 7. MULTI-STEP API CALLING ENGINE
+    // ==========================================
+    async function handleSend() {
+        const text = document.getElementById('focus-input').value.trim();
+        if (!text) return;
+
+        ensureCliPanel();
+        logCli(`ode plan --mode ${currentThinkingMode.toLowerCase()}` + (selectedRepo ? ` --repo ${selectedRepo.full_name}` : ''), 'run');
+        startWorkTimer();
+
+        document.getElementById('focus-overlay').classList.add('hidden');
+        document.getElementById('focus-input').value = '';
+
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('chat-header').classList.remove('hidden');
+        document.getElementById('chat-interface').classList.remove('hidden');
+
+        // Construct final message (text + file)
+        let finalUserMessage = text;
+        if (selectedRepo) {
+            const branch = selectedRepo.default_branch || 'main';
+            finalUserMessage = `[repository]
+full_name: ${selectedRepo.full_name}
+branch: ${branch}
+download_hint: .tyloai-user-repo-${selectedRepo.full_name.replace('/', '-')}.zip
+[/repository]
+
+${finalUserMessage}`;
+        }
+        if (currentFileContent) {
+            finalUserMessage += "\n\n" + currentFileContent;
+        }
+
+        renderMessage('user', text);
+        await saveCurrentSession({ role: 'user', content: finalUserMessage, timestamp: new Date().toISOString() });
+
+        // 清除文件
+        currentFileContent = null;
+        removeFile();
+
+        // 🔥 STEP 1: Generate Execution Plan
+        await generateExecutionPlan(finalUserMessage);
+    }
+
+    async function generateExecutionPlan(userMessage) {
+        const maxCalls = currentThinkingMode === 'Low' ? 10 : currentThinkingMode === 'High' ? 50 : 30;
+        
+        const planPrompt = `You are ode-code, a professional coding agent. The user asked: "${userMessage}"
+
+Generate an execution plan in PURE JSON format (no markdown, no code blocks).
+
+WORKFLOW RULES:
+1. Mode: ${currentThinkingMode} (Low: max 3-5 steps, Default: max 5-8 steps, High: max 8-12 steps)
+2. CRITICAL: Structure steps so that ONLY the last 2-3 steps involve writing code.
+3. Earlier steps should be: understanding requirements, analyzing existing code, planning architecture, identifying dependencies, etc.
+4. Final steps should be: implementation (code output), review/fix (1 correction allowed if needed)
+
+Step Types (use these in your plan):
+- "Analyze requirements" (no code)
+- "Review existing code structure" (no code)  
+- "Plan implementation approach" (no code)
+- "Identify dependencies and imports" (no code)
+- "Write implementation" (code allowed - this should be near the end)
+- "Review and fix issues" (code allowed - final correction step)
+
+JSON Format:
+{
+  "total_steps": number,
+  "code_starts_at_step": number (should be >= total_steps - 2),
+  "steps": [
+    {"step": 1, "action": "description", "allows_code": false},
+    ...
+    {"step": N, "action": "Write complete implementation", "allows_code": true}
+  ]
+}
+
+Output ONLY the JSON object.`;
+        try {
+            const response = await fetch(`${API_CONFIG.baseUrl}/chat/completions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: API_CONFIG.models['ode-7-flash'],
+                    messages: [
+                        { role: 'system', content: 'You are a JSON generator for ode-code execution plans.' },
+                        { role: 'user', content: planPrompt }
+                    ],
+                    stream: false,
+                    temperature: 0.3
+                })
+            });
+
+            const data = await response.json();
+            const content = data.choices?.[0]?.message?.content?.trim();
+            
+            // Parse JSON
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) throw new Error("Invalid JSON response");
+            
+            const plan = JSON.parse(jsonMatch[0]);
+            console.log("📋 Execution Plan:", plan);
+
+            // Render Plan UI
+            renderExecutionPlan(plan);
+            logCli(`plan ready (${plan.steps.length} steps)`, 'ok');
+            
+            // Execute Steps
+            await executeSteps(plan, userMessage);
+
+        } catch (error) {
+            console.error("Plan generation error:", error);
+            renderMessage('ai', "⚠️ Failed to generate execution plan. Please try again.");
+            logCli('plan generation failed', 'err');
+            stopWorkTimer();
+        }
+    }
+
+    function renderExecutionPlan(plan) {
+    const container = document.getElementById('messages-container');
+    const planDiv = document.createElement('div');
+    planDiv.className = 'animate-fade-in mb-6';
+    
+    const codeStartStep = plan.code_starts_at_step || (plan.steps.length - 1);
+    
+    planDiv.innerHTML = `
+        <div class="flex items-center gap-2 text-accent text-sm font-mono font-medium mb-3">
+            <i class="fa-solid fa-robot"></i> <span>ode-code</span>
+            <span class="text-xs text-gray-500 font-normal">is planning...</span>
+        </div>
+        <div class="bg-gradient-to-b from-[#1a1a1a] to-[#151515] border border-[#2a2a2a] rounded-xl p-5 shadow-lg">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-accent animate-pulse"></div>
+                    <span class="text-sm font-medium text-gray-200">Execution Plan</span>
+                </div>
+                <span class="text-xs text-gray-500 font-mono">${plan.steps.length} steps</span>
+            </div>
+            
+            <div class="space-y-3">
+                ${plan.steps.map((s, idx) => {
+                    const isCodeStep = (idx + 1) >= codeStartStep;
+                    return `
+                        <div class="flex items-start gap-3 group">
+                            <div class="flex flex-col items-center">
+                                <div class="w-6 h-6 rounded-full ${isCodeStep ? 'bg-green-900/30 border-green-700/50' : 'bg-[#252525] border-[#333]'} border flex items-center justify-center text-xs ${isCodeStep ? 'text-green-400' : 'text-gray-500'} font-mono">
+                                    ${s.step}
+                                </div>
+                                ${idx < plan.steps.length - 1 ? '<div class="w-px h-4 bg-[#333] mt-1"></div>' : ''}
+                            </div>
+                            <div class="flex-1 pb-2">
+                                <span class="text-sm ${isCodeStep ? 'text-green-300' : 'text-gray-300'}">${s.action}</span>
+                                ${isCodeStep ? '<span class="ml-2 text-[10px] bg-green-900/30 text-green-400 px-1.5 py-0.5 rounded">CODE</span>' : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+            
+            <div class="mt-4 pt-4 border-t border-[#2a2a2a] flex items-center justify-between">
+                <span class="text-xs text-gray-500">Code output begins at step ${codeStartStep}</span>
+                <span class="text-xs text-gray-600 font-mono">mode: ${currentThinkingMode.toLowerCase()}</span>
+            </div>
+        </div>
+    `;
+    container.appendChild(planDiv);
+    scrollToBottom();
+}
+    async function executeSteps(plan, userMessage) {
+    const container = document.getElementById('messages-container');
+    let accumulatedContext = '';
+    
+    // 计算哪些步骤可以输出代码（只有最后2-3步）
+    const totalSteps = plan.steps.length;
+    const codeAllowedFromStep = Math.max(1, totalSteps - 2); // 最后2-3步可以输出代���
+    
+    for (let i = 0; i < plan.steps.length; i++) {
+        const step = plan.steps[i];
+        const isLastSteps = (i + 1) >= codeAllowedFromStep;
+        
+        // 创建步骤容器 - TyloAI Code 风格
+        const stepContainer = document.createElement('div');
+        stepContainer.className = 'animate-fade-in mb-4';
+        stepContainer.innerHTML = `
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center mt-1">
+                    <div class="animate-spin" id="step-spinner-${i}"><i class="fa-solid fa-circle-notch text-accent text-xs"></i></div>
+                    <i class="fa-solid fa-check text-accent text-xs hidden" id="step-check-${i}"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-sm font-medium text-gray-200">Step ${i + 1}: ${step.action}</span>
+                        <span class="text-xs text-gray-500 font-mono" id="step-status-${i}">running...</span>
+                    </div>
+                    <div id="step-content-${i}" class="text-sm text-gray-400 leading-relaxed"></div>
+                </div>
+            </div>
+        `;
+        container.appendChild(stepContainer);
+        scrollToBottom();
+        logCli(`step ${i + 1}/${totalSteps}: ${step.action}`, 'run');
+        
+        // 构建系统提示词 - 控制代码输出
+        const codeInstruction = isLastSteps 
+            ? 'You may now output complete code blocks if needed. This is a final implementation step.'
+            : 'DO NOT output any code blocks yet. Focus on analysis, planning, and explanation only. Code will be written in later steps.';
+        
+        const systemPrompt = `You are ode-code, a professional coding agent similar to TyloAI Code.
+
+Current Step: ${i + 1}/${totalSteps} - ${step.action}
+
+IMPORTANT INSTRUCTIONS:
+- ${codeInstruction}
+- Be concise and focused on this specific step.
+- Use markdown formatting for clarity.
+- If this is an analysis step, explain your reasoning.
+- If this is an implementation step (final steps), provide complete, working code.
+
+Previous context from earlier steps:
+${accumulatedContext || 'This is the first step.'}`;
+
+        const contextMessages = [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userMessage }
+        ];
+
+        try {
+            // 流式输出
+            const response = await fetch(`${API_CONFIG.baseUrl}/chat/completions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: API_CONFIG.models['ode-7'],
+                    messages: contextMessages,
+                    stream: true,
+                    temperature: 0.7
+                })
+            });
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let stepContent = '';
+            const contentEl = document.getElementById(`step-content-${i}`);
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n').filter(line => line.startsWith('data: '));
+                
+                for (const line of lines) {
+                    const jsonStr = line.replace('data: ', '').trim();
+                    if (jsonStr === '[DONE]') continue;
+                    
+                    try {
+                        const parsed = JSON.parse(jsonStr);
+                        const delta = parsed.choices?.[0]?.delta?.content || '';
+                        if (delta) {
+                            stepContent += delta;
+                            // 实时渲染Markdown
+                            contentEl.innerHTML = renderMarkdown(stepContent);
+                            scrollToBottom();
+                        }
+                    } catch (e) {
+                        // 忽略解析错误
+                    }
+                }
+            }
+            
+            // 步骤完成
+            document.getElementById(`step-spinner-${i}`).classList.add('hidden');
+            document.getElementById(`step-check-${i}`).classList.remove('hidden');
+            document.getElementById(`step-status-${i}`).textContent = 'completed';
+            document.getElementById(`step-status-${i}`).classList.add('text-green-400');
+            logCli(`step ${i + 1} ok`, 'ok');
+            
+            // 累积上下文
+            accumulatedContext += `\n\n[Step ${i + 1} Output]:\n${stepContent}`;
+            sessionContext.push({ role: 'assistant', content: stepContent });
+            
+        } catch (error) {
+            console.error(`Step ${i+1} error:`, error);
+            document.getElementById(`step-spinner-${i}`).classList.add('hidden');
+            document.getElementById(`step-status-${i}`).textContent = 'failed';
+            document.getElementById(`step-status-${i}`).classList.add('text-red-400');
+            logCli(`step ${i + 1} failed`, 'err');
+        }
+        
+        // 步骤间短暂延迟
+        await new Promise(resolve => setTimeout(resolve, 300));
+    }
+    
+    // 显示完成时间
+    const totalTime = stopWorkTimer();
+    const completionDiv = document.createElement('div');
+    completionDiv.className = 'animate-fade-in mt-4 p-3 bg-green-900/20 border border-green-800/30 rounded-lg';
+    completionDiv.innerHTML = `
+        <div class="flex items-center gap-2 text-green-400 text-sm">
+            <i class="fa-solid fa-check-circle"></i>
+            <span>Completed in <span class="font-mono font-medium">${totalTime}</span></span>
+        </div>
+    `;
+    container.appendChild(completionDiv);
+    logCli(`session completed in ${totalTime}`, 'ok');
+    scrollToBottom();
+    
+    // 保存会话
+    await saveCurrentSession({ role: 'assistant', content: accumulatedContext, timestamp: new Date().toISOString() });
+}
+
+    // ==========================================
+    // 8. UI RENDERING
+    // ==========================================
+    function renderMessage(role, content) {
+    const container = document.getElementById('messages-container');
+    const div = document.createElement('div');
+    
+    if (role === 'user') {
+        div.className = 'bg-[#191919] border border-[#333] rounded-lg p-4 animate-fade-in self-end w-full';
+        const repoChip = selectedRepo ? `<div class="github-pill mb-2"><span class="dot" style="background:#22c55e"></span><span>${escapeHtml(selectedRepo.full_name)}</span><span class="text-[10px] text-gray-500">${escapeHtml(selectedRepo.default_branch || 'main')}</span></div>` : '';
+        div.innerHTML = `${repoChip}<p class="text-gray-200 text-sm font-sans leading-relaxed whitespace-pre-wrap">${escapeHtml(content)}</p>`;
+    } else {
+        div.className = 'flex flex-col gap-2 animate-fade-in w-full';
+        
+        div.innerHTML = `
+            <div class="flex items-center gap-2 text-accent text-sm font-mono font-medium mb-1">
+                <i class="fa-solid fa-robot"></i> <span>ode-code</span>
+            </div>
+            <div class="text-gray-300 text-sm leading-relaxed">${renderMarkdown(content)}</div>
+        `;
+    }
+    container.appendChild(div);
+    scrollToBottom();
+}
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function scrollToBottom() {
+        const chatInterface = document.getElementById('chat-interface');
+        setTimeout(() => chatInterface.scrollTop = chatInterface.scrollHeight, 100);
+    }
+
+    // ==========================================
+    // 9. UI INTERACTIONS
+    // ==========================================
+    const sidebarTrigger = document.getElementById('sidebar-trigger-input');
+    const focusOverlay = document.getElementById('focus-overlay');
+    const focusInput = document.getElementById('focus-input');
+    const sendBtnOverlay = document.getElementById('send-btn-overlay');
+    const githubLinkBtn = document.getElementById('github-link-btn');
+    const githubRefreshBtn = document.getElementById('github-refresh-btn');
+    const githubDownloadBtn = document.getElementById('github-download-btn');
+
+    sidebarTrigger.addEventListener('focus', () => {
+        focusOverlay.classList.remove('hidden');
+        focusInput.focus();
+    });
+
+    focusOverlay.addEventListener('click', (e) => {
+        if (e.target === focusOverlay || e.target.id === 'close-overlay-area') {
+            focusOverlay.classList.add('hidden');
+        }
+    });
+
+    focusInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+        }
+    });
+
+    sendBtnOverlay.addEventListener('click', handleSend);
+
+    // GitHub 事件
+    if (githubLinkBtn) githubLinkBtn.addEventListener('click', startGithubOAuth);
+    if (githubRefreshBtn) githubRefreshBtn.addEventListener('click', () => fetchGithubRepos(true));
+    if (githubDownloadBtn) githubDownloadBtn.addEventListener('click', downloadSelectedRepo);
+
+    // Dropdowns
+    function setupDropdown(btnId, menuId, textId, optionClass) {
+        const btn = document.getElementById(btnId);
+        const menu = document.getElementById(menuId);
+        const textDisplay = document.getElementById(textId);
+        if (!btn || !menu || !textDisplay) return;
+        
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('[id$="-dropdown"]').forEach(el => {
+                if (el.id !== menuId) el.classList.add('hidden');
+            });
+            menu.classList.toggle('hidden');
+        });
+
+        if (optionClass) {
+            menu.querySelectorAll(`.${optionClass}`).forEach(opt => {
+                opt.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    
+                    if (btnId === 'mode-btn') {
+                        const val = opt.getAttribute('data-value');
+                        currentThinkingMode = val;
+                        textDisplay.innerText = val;
+                        menu.querySelectorAll(`.${optionClass}`).forEach(o => {
+                            o.classList.remove('bg-[#2a2a2c]');
+                            const check = o.querySelector('.fa-check');
+                            if (check) check.remove();
+                        });
+                        opt.classList.add('bg-[#2a2a2c]');
+                        opt.insertAdjacentHTML('beforeend', '<i class="fa-solid fa-check text-accent text-[10px]"></i>');
+                    } else if (btnId === 'repo-btn') {
+                        const val = opt.textContent.trim();
+                        textDisplay.innerText = val.length > 15 ? val.substring(0, 12) + '...' : val;
+                    }
+                    
+                    menu.classList.add('hidden');
+                });
+            });
+        }
+    }
+
+    setupDropdown('repo-btn', 'repo-dropdown', 'repo-text', 'repo-item');
+    setupDropdown('mode-btn', 'mode-dropdown', 'mode-text', 'mode-option');
+
+    document.addEventListener('click', () => {
+        document.getElementById('repo-dropdown').classList.add('hidden');
+        document.getElementById('mode-dropdown').classList.add('hidden');
+    });
+
+    function createNewSession() {
+        // 重置当前会话ID和上下文
+        currentChatId = null;
+        sessionContext = []; // 每个会话独立上下文
+        
+        // 重置UI
+        document.getElementById('start-screen').classList.remove('hidden');
+        document.getElementById('chat-header').classList.add('hidden');
+        document.getElementById('chat-interface').classList.add('hidden');
+        document.getElementById('messages-container').innerHTML = '';
+        document.getElementById('header-title').innerText = 'New Session';
+        
+        // 重置计时器
+        if (workTimer) {
+            clearInterval(workTimer);
+            workTimer = null;
+        }
+        document.getElementById('work-timer').classList.add('hidden');
+        
+        // 清除文件
+        removeFile();
+    }
+    // 计时器函数
+    function startWorkTimer() {
+        if (workTimer) {
+            clearInterval(workTimer);
+            workTimer = null;
+        }
+        workStartTime = Date.now();
+        const timerEl = document.getElementById('work-timer');
+        const displayEl = document.getElementById('timer-display');
+        timerEl.classList.remove('hidden');
+        
+        workTimer = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - workStartTime) / 1000);
+            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const secs = (elapsed % 60).toString().padStart(2, '0');
+            displayEl.textContent = `${mins}:${secs}`;
+        }, 1000);
+    }
+
+    function stopWorkTimer() {
+        if (workTimer) {
+            clearInterval(workTimer);
+            workTimer = null;
+        }
+        if (!workStartTime) return '0m 00s';
+        const elapsed = Math.floor((Date.now() - workStartTime) / 1000);
+        const mins = Math.floor(elapsed / 60);
+        const secs = elapsed % 60;
+        workStartTime = null;
+        return `${mins}m ${secs}s`;
+    }
+    // Markdown 渲染函数
+function renderMarkdown(content) {
+    if (typeof marked === 'undefined') {
+        // fallback if marked not loaded
+        return content.replace(/\n/g, '<br>');
+    }
+    
+    // 配置 marked
+    marked.setOptions({
+        breaks: true,
+        gfm: true,
+        headerIds: false,
+        mangle: false
+    });
+    
+    let html = marked.parse(content);
+    
+    // 为代码块添加语言标签和复制按钮
+    html = html.replace(/<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g, (match, lang, code) => {
+        const escapedCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `
+            <div class="code-block-header">
+                <span class="code-block-lang">${lang}</span>
+                <button class="code-copy-btn" onclick="copyCodeBlock(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <pre><code class="language-${lang}">${code}</code></pre>
+        `;
+    });
+    
+    // 处理没有语言标识的代码块
+    html = html.replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, (match, code) => {
+        return `
+            <div class="code-block-header">
+                <span class="code-block-lang">code</span>
+                <button class="code-copy-btn" onclick="copyCodeBlock(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <pre><code>${code}</code></pre>
+        `;
+    });
+    
+    return `<div class="markdown-body">${html}</div>`;
+}
+
+// 复制代码块
+function copyCodeBlock(btn) {
+    const pre = btn.closest('.code-block-header').nextElementSibling;
+    const code = pre.querySelector('code').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+        }, 2000);
+    });
+}
+// 流式输出消息
+async function streamAIMessage(response, containerEl) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullContent = '';
+    
+    // 创建消息容器
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'flex flex-col gap-2 animate-fade-in w-full';
+    messageDiv.innerHTML = `
+        <div class="flex items-center gap-2 text-accent text-sm font-mono font-medium mb-1">
+            <i class="fa-solid fa-robot"></i> <span>ode-code</span>
+        </div>
+        <div class="ai-content text-gray-300 text-sm leading-relaxed"></div>
+    `;
+    containerEl.appendChild(messageDiv);
+    
+    const contentEl = messageDiv.querySelector('.ai-content');
+    
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n').filter(line => line.startsWith('data: '));
+        
+        for (const line of lines) {
+            const jsonStr = line.replace('data: ', '').trim();
+            if (jsonStr === '[DONE]') continue;
+            
+            try {
+                const parsed = JSON.parse(jsonStr);
+                const delta = parsed.choices?.[0]?.delta?.content || '';
+                if (delta) {
+                    fullContent += delta;
+                    contentEl.innerHTML = renderMarkdown(fullContent);
+                    scrollToBottom();
+                }
+            } catch (e) {
+                // 忽略解析错误
+            }
+        }
+    }
+    
+    return fullContent;
+}
+
+// ==========================================
+// 10. CLI Log（TyloAI Code / Codex CLI 工作流体验）
+// ==========================================
+function ensureCliPanel() {
+    const panel = document.getElementById('cli-panel');
+    if (!panel) return;
+    panel.classList.remove('hidden');
+    const collapseBtn = document.getElementById('cli-collapse');
+    const clearBtn = document.getElementById('cli-clear');
+    if (collapseBtn && !collapseBtn.dataset.bound) {
+        collapseBtn.dataset.bound = 'true';
+        collapseBtn.addEventListener('click', toggleCliCollapse);
+    }
+    if (clearBtn && !clearBtn.dataset.bound) {
+        clearBtn.dataset.bound = 'true';
+        clearBtn.addEventListener('click', clearCliLog);
+    }
+}
+
+function logCli(message, type = 'run') {
+    const body = document.getElementById('cli-body');
+    ensureCliPanel();
+    if (!body) return;
+    const now = new Date();
+    const stamp = now.toTimeString().split(' ')[0];
+    const colorClass = type === 'ok' ? 'cli-ok' : type === 'err' ? 'cli-err' : 'cli-run';
+    const line = document.createElement('div');
+    line.className = 'cli-line';
+    line.innerHTML = `<span class="text-gray-600">${stamp}</span> <span class="cli-prompt">tyloai</span> <span class="cli-cmd">$</span> <span class="${colorClass}">${escapeHtml(message)}</span>`;
+    body.appendChild(line);
+    body.scrollTop = body.scrollHeight;
+}
+
+function clearCliLog() {
+    const body = document.getElementById('cli-body');
+    if (!body) return;
+    body.innerHTML = '';
+    logCli('log cleared', 'ok');
+}
+
+function toggleCliCollapse() {
+    const body = document.getElementById('cli-body');
+    const btn = document.getElementById('cli-collapse');
+    if (!body || !btn) return;
+    cliCollapsed = !cliCollapsed;
+    body.style.display = cliCollapsed ? 'none' : 'block';
+    btn.textContent = cliCollapsed ? 'expand' : 'collapse';
+}
+</script>
+</body>
+</html>

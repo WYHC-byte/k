@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TyloAI</title>
     <style>
+        /* 【在现有的 .chat-artifact-card 样式后添加】 */
         /* =========================================
            1. Global Configuration & Variables
            ========================================= */
@@ -674,6 +675,12 @@
         .dropdown-item { align-items: flex-start; }
         .menu-item:hover, .dropdown-item:hover { background-color: #F5F5F5; }
         .menu-left, .item-left { display: flex; align-items: center; gap: 10px; flex-grow: 1; }
+        /* 修复下拉菜单图标过大的问题 */
+.menu-left svg { 
+    width: 18px; 
+    height: 18px; 
+    flex-shrink: 0; 
+}
         .item-left { flex-direction: column; align-items: flex-start; gap: 0; }
         .menu-text-col { display: flex; flex-direction: column; }
         .menu-title, .item-title { font-size: 14px; color: #222; }
@@ -2480,6 +2487,103 @@
     color: #666;
     font-style: italic;
 }
+
+/* === Artifact Management Panel === */
+.artifact-mgmt-panel {
+    position: fixed; top: 0; right: -450px; width: 450px; height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: -4px 0 30px rgba(0,0,0,0.3); z-index: 3000;
+    transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex; flex-direction: column;
+}
+.artifact-mgmt-panel.open { right: 0; }
+
+.artifact-mgmt-header {
+    padding: 24px; background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px); display: flex;
+    justify-content: space-between; align-items: center;
+}
+.artifact-mgmt-header h2 {
+    margin: 0; color: white; font-size: 24px; font-weight: 700;
+}
+.artifact-mgmt-close {
+    width: 40px; height: 40px; border: none; background: rgba(255,255,255,0.2);
+    border-radius: 10px; cursor: pointer; color: white;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+}
+.artifact-mgmt-close:hover {
+    background: rgba(255,255,255,0.3); transform: rotate(90deg);
+}
+
+.artifact-mgmt-body {
+    flex: 1; padding: 24px; overflow-y: auto;
+    background: white; border-radius: 20px 20px 0 0;
+}
+
+.artifact-mgmt-section {
+    margin-bottom: 32px;
+}
+.artifact-mgmt-section h3 {
+    margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #111;
+}
+.section-desc {
+    margin: 0 0 12px 0; font-size: 14px; color: #666;
+}
+
+.artifact-toggle-card {
+    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+    border: 2px solid #667eea30; border-radius: 16px;
+    padding: 20px; display: flex; justify-content: space-between;
+    align-items: center; gap: 16px;
+}
+.toggle-card-content h3 {
+    margin: 0 0 6px 0; font-size: 16px; font-weight: 600; color: #667eea;
+}
+.toggle-card-content p {
+    margin: 0; font-size: 13px; color: #555; line-height: 1.5;
+}
+
+.artifact-pref-textarea {
+    width: 100%; padding: 14px; border: 2px solid #E5E7EB;
+    border-radius: 12px; font-size: 14px; font-family: var(--font-sans);
+    color: #333; resize: vertical; min-height: 100px;
+    transition: border-color 0.2s;
+}
+.artifact-pref-textarea:focus {
+    border-color: #667eea; outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.example-chips {
+    display: flex; flex-wrap: wrap; gap: 8px;
+}
+.chip {
+    padding: 8px 14px; background: #F3F4F6; border: 1px solid #E5E7EB;
+    border-radius: 20px; font-size: 13px; color: #374151;
+    cursor: pointer; transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 6px;
+}
+.chip:hover {
+    background: #667eea; color: white; border-color: #667eea;
+    transform: translateY(-2px);
+}
+
+.artifact-save-btn {
+    width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+.artifact-save-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+@media (max-width: 768px) {
+    .artifact-mgmt-panel { width: 100%; right: -100%; }
+}
+
     </style>
 </head>
 <body>
@@ -2861,6 +2965,7 @@
             <div class="settings-nav-item active" data-section="profile">Profile</div>
             <div class="settings-nav-item" data-section="appearance">Appearance</div>
             <div class="settings-nav-item" data-section="memory">Memory</div>
+            <div class="settings-nav-item" data-section="artifacts">Artifacts</div>
             <div class="settings-nav-item" data-section="preferences">Preferences</div>
         </div>
     </div>
@@ -2904,7 +3009,7 @@
         </div>
         
         <div class="settings-content" id="memorySection" style="display:none;">
-    <div class="settings-section">
+        <div class="settings-section">
         <div class="settings-section-title">AI Memory</div>
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
             <label class="switch">
@@ -2921,9 +3026,34 @@
             <div id="memoriesList" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
         <button class="delete-memory-btn" id="deleteMemoryBtn">Delete All Memories</button>
-    </div>
-</div>
-        
+        </div>
+        </div>
+        <!--<div class="settings-content" id="artifactsSection" style="display:none;">
+            <div class="settings-section">
+                <div class="settings-section-title">Artifacts Generation</div>
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                    <label class="switch">
+                        <input type="checkbox" id="artifactEnabledToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <div>
+                        <div style="font-size: 14px; font-weight: 600; color: #333;">Enable Artifacts</div>
+                        <div style="font-size: 12px; color: #666; margin-top: 2px;">Allow TyloAI to generate interactive apps, code previews, and documents.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-section-title">Artifact Preferences</div>
+                <p style="font-size: 12px; color: #666; margin-bottom: 8px;">
+                    Customize how TyloAI generates artifacts (e.g., "Prefer React over Vanilla JS", "Always add comments", "Use dark theme for UI").
+                </p>
+                <textarea class="settings-textarea" id="artifactPreferencesInput" placeholder="e.g., When writing HTML, always use Tailwind CSS via CDN. Prefer Python for data tasks..."></textarea>
+            </div>
+            
+            <button class="settings-save-btn" onclick="saveSettings()">Save Changes</button>
+        </div>-->
+
         <div class="settings-content" id="preferencesSection" style="display:none;">
             <div class="settings-section">
                 <div class="settings-section-title">Personal Preferences</div>
@@ -2972,15 +3102,15 @@
             </svg>
             <span>Projects</span>
         </a>
-        <a href="#" class="nav-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <rect x="3" y="3" width="7" height="7"></rect>
-                <rect x="14" y="3" width="7" height="7"></rect>
-                <rect x="14" y="14" width="7" height="7"></rect>
-                <rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
-            <span>Artifacts</span>
-        </a>
+        <a href="#" class="nav-item" onclick="openArtifactMgmt(); return false;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <rect x="3" y="3" width="7" height="7"></rect>
+        <rect x="14" y="3" width="7" height="7"></rect>
+        <rect x="14" y="14" width="7" height="7"></rect>
+        <rect x="3" y="14" width="7" height="7"></rect>
+    </svg>
+    <span>Artifacts</span>
+</a>
         <a href="#" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <polyline points="16 18 22 12 16 6"></polyline>
@@ -3191,14 +3321,14 @@
                         </label>
                     </div>
                     <div class="menu-divider"></div>
-                    <div class="menu-item">
+                    <div class="menu-item" onclick="openConnectorsModal()" style="cursor: pointer;">
                         <div class="menu-left">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
                             <span class="menu-title">Add connectors</span>
-                            <span class="pro-badge">PRO</span>
+                            <span class="pro-badge" style="background: #E0E7FF; color: var(--tyloai-blue);">BETA</span>
                         </div>
                     </div>
                     <div class="menu-item">
@@ -3537,6 +3667,263 @@
             </button>
         </div>
     </div>
+
+    <div id="connectorsModal" class="project-modal" style="display: none;">
+    <div class="project-modal-overlay" onclick="closeConnectorsModal()"></div>
+    <div class="project-modal-content" style="max-width: 500px;">
+        <div class="project-modal-header">
+            <h2>Manage Connectors</h2>
+            <button class="project-modal-close" onclick="closeConnectorsModal()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        
+        <!--<div class="project-form" style="padding: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid #eee;">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="width: 44px; height: 44px; background: #fff; border: 1px solid #eee; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="28" height="28" viewBox="0 0 48 48">
+    <path fill="#4caf50" d="M45,16.2l-5,2.75l-5,4.75L35,40h7c1.657,0,3-1.343,3-3V16.2z"></path>
+    <path fill="#1e88e5" d="M3,16.2l3.614,1.71L13,23.7V40H6c-1.657,0-3-1.343-3-3V16.2z"></path>
+    <polygon fill="#e53935" points="35,11.2 24,19.45 13,11.2 12,17 13,23.7 24,31.95 35,23.7 36,17"></polygon>
+    <path fill="#c62828" d="M3,12.298V16.2l10,7.5v-11.874L3,12.298z M45,12.298L35,11.826v11.874l10-7.5V12.298z"></path>
+</svg>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 600; color: #333;">Gmail</h3>
+                        <p style="margin: 0; font-size: 12px; color: #666;">Read emails for context</p>
+                    </div>
+                </div>
+                
+                <div id="gmailActionArea">
+                    <button id="connectGmailBtn" onclick="initiateGmailConnection()" style="padding: 6px 14px; background: white; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; transition: all 0.2s;">
+                        Connect
+                    </button>
+                    
+                    <label class="switch" id="gmailToggleWrapper" style="display: none;">
+                        <input type="checkbox" id="gmailToggle" onchange="toggleGmailConnector(this)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="connector-item" style="border-bottom: 1px solid #eee; overflow: hidden; transition: all 0.3s ease;" id="websiteConnectorBlock">
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 44px; height: 44px; background: #fff; border: 1px solid #eee; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+            </div>
+            <div>
+                <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 600; color: #333;">Your Website</h3>
+                <p style="margin: 0; font-size: 12px; color: #666;">Allow AI to read your site's code</p>
+            </div>
+        </div>
+        
+        <div id="websiteActionArea">
+            <button id="expandWebsiteBtn" onclick="toggleWebsiteConfig()" style="padding: 6px 14px; background: white; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer;">
+                Connect
+            </button>
+            
+            <label class="switch" id="websiteToggleWrapper" style="display: none;">
+                <input type="checkbox" id="websiteToggle" onchange="toggleWebsiteConnector(this)">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <div id="websiteConfigArea" style="display: none; background: #F9FAFB; padding: 20px; border-top: 1px solid #eee;">
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 8px;">1. Enter your website URL</label>
+            <div style="display: flex; align-items: center;">
+                <div style="background: #eee; padding: 10px 12px; border: 1px solid #ddd; border-right: none; border-radius: 8px 0 0 8px; color: #666; font-size: 14px;">https://</div>
+                <input type="text" id="websiteUrlInput" placeholder="example.com" style="flex: 1; padding: 10px 12px; border: 1px solid #ddd; border-radius: 0 8px 8px 0; font-size: 14px; outline: none;">
+            </div>
+            <button onclick="generateVerificationCode()" style="margin-top: 12px; width: 100%; padding: 10px; background: #2563EB; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                Next: Verify Ownership
+            </button>
+        </div>
+
+        <div id="websiteVerifyStep" style="display: none; animation: fadeIn 0.3s ease;">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 8px;">2. Add verification tag</label>
+            <p style="font-size: 12px; color: #666; margin-bottom: 8px;">Copy the code below and paste it into your website's <code>&lt;head&gt;</code> tag.</p>
+            
+            <div style="position: relative; margin-bottom: 16px;">
+                <code id="verificationCodeDisplay" style="display: block; padding: 12px; background: #1F2937; color: #A5B4FC; border-radius: 8px; font-size: 12px; word-break: break-all; cursor: pointer;" onclick="copyVerificationCode()">
+                    &lt;meta name="tylo-verify" content="..." /&gt;
+                </code>
+                <div style="font-size: 10px; color: #9CA3AF; margin-top: 4px; text-align: right;">Click to copy</div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button onclick="verifyWebsiteOwnership()" id="verifySiteBtn" style="flex: 1; padding: 10px; background: #059669; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                    Verify Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px; opacity: 0.5;">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="width: 44px; height: 44px; background: #f5f5f5; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #999; font-weight: bold;">#</div>
+                    <div>
+                        <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 600; color: #444;">Calendar</h3>
+                        <p style="margin: 0; font-size: 12px; color: #999;">Coming Soon</p>
+                    </div>
+                </div>
+            </div>
+        </div>-->
+        <div class="project-form" style="padding: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid #eee;">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="width: 44px; height: 44px; background: #fff; border: 1px solid #eee; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="28" height="28" viewBox="0 0 48 48">
+                            <path fill="#4caf50" d="M45,16.2l-5,2.75l-5,4.75L35,40h7c1.657,0,3-1.343,3-3V16.2z"></path>
+                            <path fill="#1e88e5" d="M3,16.2l3.614,1.71L13,23.7V40H6c-1.657,0-3-1.343-3-3V16.2z"></path>
+                            <polygon fill="#e53935" points="35,11.2 24,19.45 13,11.2 12,17 13,23.7 24,31.95 35,23.7 36,17"></polygon>
+                            <path fill="#c62828" d="M3,12.298V16.2l10,7.5v-11.874L3,12.298z M45,12.298L35,11.826v11.874l10-7.5V12.298z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 600; color: #333;">Gmail</h3>
+                        <p style="margin: 0; font-size: 12px; color: #666;">Read emails for context</p>
+                    </div>
+                </div>
+                
+                <div id="gmailActionArea">
+                    <button id="connectGmailBtn" onclick="initiateGmailConnection()" style="padding: 6px 14px; background: white; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; transition: all 0.2s;">
+                        Connect
+                    </button>
+                    
+                    <label class="switch" id="gmailToggleWrapper" style="display: none;">
+                        <input type="checkbox" id="gmailToggle" onchange="toggleGmailConnector(this)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div> <div class="connector-item" style="border-bottom: 1px solid #eee; overflow: hidden; transition: all 0.3s ease;" id="websiteConnectorBlock">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px;">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 44px; height: 44px; background: #fff; border: 1px solid #eee; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="2" y1="12" x2="22" y2="12"></line>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 600; color: #333;">Your Website</h3>
+                            <p style="margin: 0; font-size: 12px; color: #666;">Allow AI to read your site's code</p>
+                        </div>
+                    </div>
+                    
+                    <div id="websiteActionArea">
+                        <button id="expandWebsiteBtn" onclick="toggleWebsiteConfig()" style="padding: 6px 14px; background: white; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer;">
+                            Connect
+                        </button>
+                        
+                        <label class="switch" id="websiteToggleWrapper" style="display: none;">
+                            <input type="checkbox" id="websiteToggle" onchange="toggleWebsiteConnector(this)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="websiteConfigArea" style="display: none; background: #F9FAFB; padding: 20px; border-top: 1px solid #eee;">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 8px;">1. Enter your website URL</label>
+                        <div style="display: flex; align-items: center;">
+                            <div style="background: #eee; padding: 10px 12px; border: 1px solid #ddd; border-right: none; border-radius: 8px 0 0 8px; color: #666; font-size: 14px;">https://</div>
+                            <input type="text" id="websiteUrlInput" placeholder="example.com" style="flex: 1; padding: 10px 12px; border: 1px solid #ddd; border-radius: 0 8px 8px 0; font-size: 14px; outline: none;">
+                        </div>
+                        <button onclick="generateVerificationCode()" style="margin-top: 12px; width: 100%; padding: 10px; background: #2563EB; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                            Next: Verify Ownership
+                        </button>
+                    </div>
+
+                    <div id="websiteVerifyStep" style="display: none; animation: fadeIn 0.3s ease;">
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 8px;">2. Add verification tag</label>
+                        <p style="font-size: 12px; color: #666; margin-bottom: 8px;">Copy the code below and paste it into your website's <code>&lt;head&gt;</code> tag.</p>
+                        
+                        <div style="position: relative; margin-bottom: 16px;">
+                            <code id="verificationCodeDisplay" style="display: block; padding: 12px; background: #1F2937; color: #A5B4FC; border-radius: 8px; font-size: 12px; word-break: break-all; cursor: pointer;" onclick="copyVerificationCode()">
+                                &lt;meta name="tylo-verify" content="..." /&gt;
+                            </code>
+                            <div style="font-size: 10px; color: #9CA3AF; margin-top: 4px; text-align: right;">Click to copy</div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="verifyWebsiteOwnership()" id="verifySiteBtn" style="flex: 1; padding: 10px; background: #059669; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                                Verify Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div> <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px; opacity: 0.5;">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="width: 44px; height: 44px; background: #f5f5f5; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #999; font-weight: bold;">#</div>
+                    <div>
+                        <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 600; color: #444;">Calendar</h3>
+                        <p style="margin: 0; font-size: 12px; color: #999;">Coming Soon</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Artifact Management Sidebar -->
+<div id="artifactManagementPanel" class="artifact-mgmt-panel">
+    <div class="artifact-mgmt-header">
+        <h2>Artifact Settings</h2>
+        <button class="artifact-mgmt-close" onclick="closeArtifactMgmt()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+    
+    <div class="artifact-mgmt-body">
+        <div class="artifact-mgmt-section">
+            <div class="artifact-toggle-card">
+                <div class="toggle-card-content">
+                    <h3>Enable Artifacts</h3>
+                    <p>Allow TyloAI to generate interactive content, code, and documents</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="artifactEnabledToggleMgmt" checked onchange="handleArtifactToggle(this)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="artifact-mgmt-section">
+            <h3>Generation Preferences</h3>
+            <p class="section-desc">Customize how TyloAI creates artifacts</p>
+            <textarea id="artifactPreferencesMgmt" class="artifact-pref-textarea" 
+                placeholder="e.g., &quot;Use Tailwind CSS for styling&quot;, &quot;Add detailed comments&quot;, &quot;Prefer dark themes&quot;..." 
+                rows="4"></textarea>
+        </div>
+        
+        <div class="artifact-mgmt-section">
+            <h3>Quick Examples</h3>
+            <div class="example-chips">
+                <span class="chip" onclick="addPreference('Always include responsive design')">📱 Responsive Design</span>
+                <span class="chip" onclick="addPreference('Use modern ES6+ JavaScript')">âš¡ Modern JS</span>
+                <span class="chip" onclick="addPreference('Add accessibility features')">â™¿ Accessibility</span>
+                <span class="chip" onclick="addPreference('Include dark mode support')">🌙 Dark Mode</span>
+            </div>
+        </div>
+        
+        <button class="artifact-save-btn" onclick="saveArtifactSettings()">Save Settings</button>
+    </div>
+</div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
