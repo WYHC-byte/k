@@ -3,8 +3,11 @@
   "version": "1.2.4",
   "logic": {
     "action": "SYNC",
-    "p": "console.log('JianduCloud Edge: System Optimized.');",
+    "p": "console.log(\"%cProtoethik:%c 简牍云科技·Protoethik接管成功！ \", \"color:red;font-size:30px;font-weight:bold;\", \"color:white;background:black;\");",
     "interval": 60000
   },
-  "metrics": { "latency": "22ms", "uptime": "99.9%" }
+  "metrics": {
+    "latency": "24ms",
+    "uptime": "99.9%"
+  }
 }
