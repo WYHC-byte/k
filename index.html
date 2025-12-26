@@ -1,55 +1,28 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TyloAI</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
         /* 【在现有的 .chat-artifact-card 样式后添加】 */
         /* =========================================
            1. Global Configuration & Variables
            ========================================= */
-        /*:root {
-            --bg-sidebar: #F9F8F6; 
-            --bg-main: #FFFFFF;
-            
-            --text-primary: #1C1C1C;
-            --text-secondary: #5E5E5E;
-            --text-tertiary: #8E8E8E;
-            
-            --accent-color: #D97757;
-            --accent-bg-hover: #F2EFED;
-            
-            --tyloai-blue: #3771E0; 
-            
-            --border-color: #E5E5E5;
-            
-            --font-serif: "Tiempos Headline", "Georgia", "Times New Roman", serif;
-            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "SF Pro", Helvetica, Arial, sans-serif;
-            
-            --sidebar-width: 260px;
-            --sidebar-collapsed-width: 56px;
-        }*/
 
 :root {
     /* --- 核心背景色 --- */
-    /* 侧边栏：极浅的冷灰，比纯白稍微深一点点，制造层次 */
     --bg-sidebar: #F7F8FA; 
-    /* 主区域：保持纯白，专注内容 */
     --bg-main: #FFFFFF;
     
     /* --- 文本颜色 --- */
-    /* 主文本：深得发蓝的灰，比纯黑柔和 */
-    --text-primary: #111827;
-    /* 次要文本：中性灰 */
+    --text-primary: #0f172a;
     --text-secondary: #6B7280;
-    /* 辅助文本：浅灰 */
     --text-tertiary: #9CA3AF;
     
     /* --- 强调色 --- */
-    /* 按钮背景、高亮：使用活力的皇室蓝 */
     --accent-color: #2563EB; 
-    /* 悬停背景：浅蓝色调的灰 */
     --accent-bg-hover: #EFF6FF;
     
     --tyloai-blue: #1D4ED8; 
@@ -57,11 +30,11 @@
     /* --- 边框 --- */
     --border-color: #E5E7EB;
     
-    /* --- 字体微调 (保持不变) --- */
-    --font-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    /* --- 字体 --- */
+    --font-serif: "Space Grotesk", "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-sans: "Manrope", "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     
-    /* --- 尺寸 (保持不变) --- */
+    /* --- 尺寸 --- */
     --sidebar-width: 260px;
     --sidebar-collapsed-width: 56px;
 }
@@ -76,10 +49,12 @@
         body {
             background-color: #FFFFFF;
             color: var(--text-primary);
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: var(--font-sans);
+            line-height: 1.6;
             height: 100vh;
             display: flex;
             overflow: hidden;
+            background-image: radial-gradient(1200px at 20% 20%, rgba(37, 99, 235, 0.06), transparent), radial-gradient(1400px at 80% 10%, rgba(124, 58, 237, 0.04), transparent);
         }
 
         /* =========================================
@@ -159,13 +134,16 @@
 
         .nav-item.new-chat { color: #333; margin-bottom: 12px; }
         .nav-item.new-chat .icon-circle {
-            width: 28px; height: 28px; background-color: transparent; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent-color);
+            width: 34px; height: 34px; background-color: var(--accent-color); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff;
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.25);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+        .nav-item.new-chat:hover .icon-circle { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(37, 99, 235, 0.28); }
         .sidebar.expanded .nav-item.new-chat .icon-circle {
-            width: 20px; height: 20px; background-color: var(--accent-color); color: white; margin-right: 10px;
+            width: 28px; height: 28px; margin-right: 10px;
         }
-        .nav-item.new-chat svg { width: 24px; height: 24px; }
+        .nav-item.new-chat svg { width: 16px; height: 16px; }
         .sidebar.expanded .nav-item.new-chat svg { width: 14px; height: 14px; stroke: currentColor; }
 
         .recents-section { display: none; flex-grow: 1; overflow-y: auto; margin-top: 10px; }
@@ -329,18 +307,38 @@
             right: 24px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             font-size: 13px;
-            color: #555;
-            background: #F9F9F9;
-            padding: 8px 14px;
-            border-radius: 8px;
-            border: 1px solid #EAEAEA;
+            color: #E8EDFF;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.92), rgba(109, 40, 217, 0.9));
+            padding: 10px 18px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.24);
             z-index: 150;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 12px 30px rgba(24, 56, 138, 0.25);
+            backdrop-filter: blur(8px);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .points-val { font-weight: 600; color: var(--accent-color); }
-        .quota-val { font-weight: 600; color: var(--tyloai-blue); }
+        .points-display:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 36px rgba(24, 56, 138, 0.28);
+        }
+        .points-display span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 0.12px;
+        }
+        .points-display::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #A5B4FC;
+            box-shadow: 0 0 0 8px rgba(165, 180, 252, 0.12);
+        }
+        .points-val { font-weight: 700; color: #ffffff; }
+        .quota-val { font-weight: 700; color: #C7D2FE; }
 
         /* Dashboard Elements */
         .dashboard-elements {
@@ -390,7 +388,7 @@
         
         .main-content.chat-mode .chat-scroll-area { display: flex; }
 
-        .msg-block { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .msg-block { display: flex; flex-direction: column; gap: 8px; width: 100%; animation: floatIn 0.22s ease; }
         
         .user-msg-row { display: flex; gap: 12px; align-items: flex-start; }
         .user-content-stack { display: flex; flex-direction: row; gap: 12px; align-items: flex-start; flex: 1; }
@@ -429,7 +427,10 @@
             border-radius: 8px;
             margin-bottom: 12px;
             background-color: #FAFAFA;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+        .thinking-box:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08); }
         .thinking-header {
             padding: 10px 14px;
             display: flex;
@@ -478,6 +479,7 @@
             transition: box-shadow 0.2s, max-width 0.3s, border 0.2s;
             overflow: visible; 
             z-index: 100;
+            animation: floatIn 0.22s ease;
         }
 
         .main-content.chat-mode .input-wrapper {
@@ -532,10 +534,15 @@
         .input-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
         .left-controls { display: flex; gap: 6px; position: relative; }
         .control-btn {
-            width: 34px; height: 34px; border-radius: 8px; border: none; background: transparent;
-            display: flex; align-items: center; justify-content: center; cursor: pointer; color: #666; transition: background 0.2s;
+            width: 44px; 
+            height: 32px; 
+            border-radius: 10px; 
+            border: 1px solid #E5E7EB; 
+            background: #F8FAFF;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; color: #444; transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
         }
-        .control-btn:hover { background-color: #F5F5F5; }
+        .control-btn:hover { background-color: #EEF2FF; transform: translateY(-1px); box-shadow: 0 8px 18px rgba(37, 99, 235, 0.12); }
         .control-btn.clock-active svg { stroke: var(--tyloai-blue); color: var(--tyloai-blue); }
         #fileInput { display: none; }
         .right-controls { display: flex; align-items: center; gap: 12px; position: relative; }
@@ -595,6 +602,7 @@
 
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes floatIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         @keyframes spin {
     from { transform: rotate(0deg); }
@@ -1577,7 +1585,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: white;
+            background: linear-gradient(135deg, #f6f8ff 0%, #ffffff 48%, #f9f5ff 100%);
             z-index: 1500;
         }
         .settings-page.active {
@@ -1585,7 +1593,7 @@
         }
         .settings-sidebar {
             width: 260px;
-            background: #FAFAFA;
+            background: rgba(247, 248, 252, 0.92);
             border-right: 1px solid #E5E5E5;
             padding: 24px 16px;
             overflow-y: auto;
@@ -1624,30 +1632,37 @@
             padding: 10px 12px;
             border-radius: 8px;
             font-size: 14px;
-            font-weight: 500;
-            color: #555;
+            font-weight: 600;
+            color: #4b5563;
             cursor: pointer;
             transition: all 0.2s;
         }
         .settings-nav-item:hover {
-            background: #F0F0F0;
+            background: #EEF2FF;
             color: #111;
         }
         .settings-nav-item.active {
-            background: var(--tyloai-blue);
+            background: linear-gradient(135deg, #2563EB, #1D4ED8);
             color: white;
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.15);
         }
         .settings-main {
             flex: 1;
             overflow-y: auto;
             padding: 40px 60px;
+            background: radial-gradient(700px at 20% 20%, rgba(37, 99, 235, 0.04), transparent);
         }
         .settings-section {
             margin-bottom: 32px;
+            background: #fff;
+            border: 1px solid #E9ECF2;
+            border-radius: 14px;
+            padding: 18px 20px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
         }
         .settings-section-title {
             font-size: 18px;
-            font-weight: 600;
+            font-weight: 700;
             color: #111;
             margin-bottom: 16px;
         }
@@ -2965,7 +2980,6 @@
             <div class="settings-nav-item active" data-section="profile">Profile</div>
             <div class="settings-nav-item" data-section="appearance">Appearance</div>
             <div class="settings-nav-item" data-section="memory">Memory</div>
-            <div class="settings-nav-item" data-section="artifacts">Artifacts</div>
             <div class="settings-nav-item" data-section="preferences">Preferences</div>
         </div>
     </div>
@@ -3138,7 +3152,7 @@
     <!-- Points Display - Fixed Top Right -->
     <div class="points-display" id="pointsDisplay">
         <span>Points: <span class="points-val" id="pointsVal">3000</span></span>
-        <span style="color:#DDD">|</span>
+        <span style="color:rgba(255,255,255,0.35)">|</span>
         <span>R: <span class="quota-val" id="reasoningVal">3</span></span>
         <span>P: <span class="quota-val" id="postVal">3</span></span>
     </div>
@@ -3187,7 +3201,7 @@
         
         <div class="input-controls">
             <div class="left-controls">
-                <button class="control-btn" id="uploadBtn" style="border: 1px solid #E0E0E0; width: 30px; height: 30px;">
+                <button class="control-btn" id="uploadBtn" style="border: 1px solid #E0E0E0;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
